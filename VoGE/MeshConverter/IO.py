@@ -8,23 +8,54 @@ N_vertices Sigma_Shape(1 or 3 or 6 or 9) If_Radian (1 or 0)
 """
 
 
-def load_off(file_name, to_torch=False):
+def load_off(file_name, to_torch=False, ignore_color=False):
     file_handle = open(file_name)
 
     file_list = file_handle.readlines()
+
+    if ignore_color:
+        colored = False
+    elif file_list[0][0:3] == 'OFF':
+        colored = False
+    elif file_list[0][0:4] == 'COFF':
+        colored = True
+    else:
+        raise Exception('Unsupported OFF format: %s' % file_list[0].strip())
+
     n_points = int(file_list[1].split(' ')[0])
     all_strings = ''.join(file_list[2:2 + n_points])
-    array_ = np.fromstring(all_strings, dtype=np.float32, sep='\n')
+    verts = np.fromstring(all_strings, dtype=np.float32, sep='\n')
+    
+    verts = verts.reshape((n_points, -1))
 
+    if colored and verts.shape[1] > 3:
+        verts, vert_color = verts[:, 0:3], verts[:, 3::]
+
+        out = [verts, None, vert_color]
+    else:
+        verts = verts[:, 0:3]
+        out = [verts, None]
+
+    n_faces = int(file_list[1].split(' ')[1])
     all_strings = ''.join(file_list[2 + n_points:])
-    array_int = np.fromstring(all_strings, dtype=np.int32, sep='\n')
+    faces = np.fromstring(all_strings, dtype=np.int32, sep='\n')
+    faces = faces.reshape((n_faces, -1))
 
-    array_ = array_.reshape((-1, 3))
+    n_vert_per_face = int(faces[0][0])
+
+    if colored and faces.shape[1] > faces[0][0] + 1:
+        faces, face_color = faces[:, 1:n_vert_per_face + 1], faces[:, (n_vert_per_face + 1)::]
+
+        out[1] = faces
+        out += [face_color, ]
+    else:
+        faces = faces[:, 1:n_vert_per_face + 1]
+        out[1] = faces
 
     if not to_torch:
-        return array_, array_int.reshape((-1, 4))[:, 1::]
+        return tuple(out)
     else:
-        return torch.from_numpy(array_), torch.from_numpy(array_int.reshape((-1, 4))[:, 1::])
+        return tuple([torch.from_numpy(t) for t in out])
 
 
 def load_goff(file_name, to_torch=False):
@@ -57,18 +88,39 @@ def load_goff(file_name, to_torch=False):
     return torch.from_numpy(points), torch.from_numpy(sigma), torch.from_numpy(radian) if radian is not None else None
 
 
-def save_off(file_name, vertices, faces):
+def save_off(file_name, vertices, faces, vert_color=None, face_color=None):
     if isinstance(vertices, torch.Tensor):
         vertices = vertices.cpu().numpy()
     if isinstance(faces, torch.Tensor):
         faces = faces.cpu().numpy()
 
-    out_string = 'OFF\n'
+    if vert_color is None and face_color is None:
+        out_string = 'OFF\n'
+    else:
+        out_string = 'COFF\n'
+
     out_string += '%d %d 0\n' % (vertices.shape[0], faces.shape[0])
-    for v in vertices:
-        out_string += '%.16f %.16f %.16f\n' % (v[0], v[1], v[2])
-    for f in faces:
-        out_string += '3 %d %d %d\n' % (f[0], f[1], f[2])
+    if vert_color is None:
+        for v in vertices:
+            out_string += '%.16f %.16f %.16f\n' % (v[0], v[1], v[2])
+    else:
+        if isinstance(vert_color, torch.Tensor):
+            vert_color = vert_color.cpu().numpy()
+        for v, c in zip(vertices, vert_color):
+            out_string += '%.16f %.16f %.16f' % (v[0], v[1], v[2])
+            out_string += (' %.16f' * len(c)) % tuple(c)
+            out_string += '\n'
+
+    if face_color is None:
+        for f in faces:
+            out_string += '3 %d %d %d\n' % (f[0], f[1], f[2])
+    else:
+        if isinstance(face_color, torch.Tensor):
+            face_color = face_color.cpu().numpy()
+        for f, c in zip(faces, face_color):
+            out_string += '3 %d %d %d\n' % (f[0], f[1], f[2])
+            out_string += (' %.16f' * len(c)) % tuple(c)
+            out_string += '\n'
     with open(file_name, 'w') as fl:
         fl.write(out_string)
     return
