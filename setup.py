@@ -62,7 +62,7 @@ setup(
     author='AuthorVoGE',
     packages=find_packages(exclude=("demo", "data")),
     license='MIT License',
-    version='0.1.1',
+    version='0.2.0',
     install_requires=INSTALL_REQUIREMENTS,
     ext_modules=ext_modules,
     cmdclass={'build_ext': BuildExtension}
