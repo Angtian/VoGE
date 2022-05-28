@@ -1,3 +1,20 @@
+
+VoGE is a differentiable rendering library conducts differentiable rendering of Gaussian ellipsoids. The rendering process fully follows ray tracing volume densities. For more details, refer to our paper.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Required Packages:
 Numpy 1.20.3
 PyTorch 1.10.2
