@@ -65,7 +65,8 @@ if __name__ == '__main__':
 
     os.makedirs('reason_occ', exist_ok=True)
 
-    # gamma must be >= 1e-3
+    # The default gamma is 1e-4, however, which make it hardly update.
+    # we have tried 1e-2, which makes it converge to some other local min
     faces_per_pixel = 60
     sigmas = 1e-3
     gamma = 1e-3
