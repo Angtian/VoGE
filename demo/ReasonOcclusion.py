@@ -70,7 +70,7 @@ if __name__ == '__main__':
         img = to_white_background(frag, torch.cat((colors, colors1), dim=0))
         save_image(img, save_head + '_target_V1' + save_pendix + '.png')
 
-
+    # v_pred0 = torch.Tensor([[-1, 0, -10]]).to(device) also works
     v_pred0 = torch.Tensor([[-1, 0, -5]]).to(device)
     v_pred1 = torch.Tensor([[0, 0, 0]]).to(device)
 
