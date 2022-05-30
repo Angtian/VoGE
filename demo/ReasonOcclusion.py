@@ -18,15 +18,19 @@ def save_image(get, save_name):
 if __name__ == '__main__':
     device = 'cuda'
 
+    # Increase percentage will reduce transparency, however, transparency is not necessary to make this experiment works
+    # We have test percentage = 0.85 (barely transparent), it still work, just need a little more iteration to converge
+    percentage = 0.7
+
     colors_ = np.array([[0, 0.2, 1], [0, 0.2, 1], [0, 1, 0.2], [0, 1, 0.2], [0, 1, 1], [0, 1, 1]])
-    verts, sigmas, colors = Cuboid.cuboid_gauss((-0.8, 0.8), (-0.4, 0.4),(-0.6, 0.6), 4000, colors=colors_, percentage=0.7)
+    verts, sigmas, colors = Cuboid.cuboid_gauss((-0.8, 0.8), (-0.4, 0.4),(-0.6, 0.6), 4000, colors=colors_, percentage=percentage)
 
     verts = torch.from_numpy(verts).type(torch.float32).to(device)
     sigmas = torch.from_numpy(sigmas).type(torch.float32).to(device)
     colors = torch.from_numpy(colors).type(torch.float32).to(device)
 
     colors_ = np.array([[1, 0.2, 0], [1, 0.2, 0], [1, 1, 0], [1, 1, 0], [0.2, 1, 0], [0.2, 1, 0]])
-    verts1, sigmas1, colors1 = Cuboid.cuboid_gauss((-1, 1), (-1, 1), (-0.3, 0.3), 3000, colors=colors_, percentage=0.7)
+    verts1, sigmas1, colors1 = Cuboid.cuboid_gauss((-1, 1), (-1, 1), (-0.3, 0.3), 3000, colors=colors_, percentage=percentage)
 
     verts1 = torch.from_numpy(verts1).type(torch.float32).to(device)
     sigmas1 = torch.from_numpy(sigmas1).type(torch.float32).to(device)
