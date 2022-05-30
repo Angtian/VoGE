@@ -30,7 +30,7 @@ import VoGE
 
 ## Demos
 
-## How does VoGE works
+## Understand the Code
 
 ## Cite
 
