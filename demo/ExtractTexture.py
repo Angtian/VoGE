@@ -7,8 +7,8 @@ import torch
 from VoGE.Renderer import GaussianRenderer, GaussianRenderSettings, interpolate_attr, to_white_background
 from VoGE.Utils import rotation_theta
 from VoGE.Meshes import GaussianMeshesNaive
-from VoGE.MeshConverter.IO import load_goff, load_off, pre_process_pascal, to_torch
-from VoGE.MeshConverter.Converters import naive_vertices_converter
+from VoGE.Converter.IO import load_goff, load_off, pre_process_pascal, to_torch
+from VoGE.Converter.Converters import naive_vertices_converter
 from VoGE.Sampler import sample_features
 
 from pytorch3d.renderer.cameras import PerspectiveCameras, look_at_view_transform
