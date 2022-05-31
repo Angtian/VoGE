@@ -1,6 +1,7 @@
 import torch
 import numpy as np
-from VoGE.MeshConverter import Converters
+from VoGE.Converter import Converters
+from VoGE.Converter import Cuboid
 from VoGE.Renderer import GaussianRenderSettings, GaussianRenderer, interpolate_attr, to_white_background
 from VoGE.Meshes import GaussianMeshes, GaussianMeshesNaive
 from pytorch3d.renderer import PerspectiveCameras, look_at_view_transform
@@ -8,7 +9,6 @@ import matplotlib.pyplot as plt
 import torch
 import imageio
 from PIL import Image
-from VoGE.MeshConverter import Cuboid
 import random
 import tqdm
 import os
