@@ -28,7 +28,7 @@ render_settings = GaussianRenderSettings(batch_size=-1, image_size=(256, 672), m
 cameras = PerspectiveCameras(focal_length=1800.0, principal_point=((336, 128),),
                              image_size=(render_settings['image_size'],), device=device, )
 
-render = GaussianRenderer(cameras=cameras, raster_settings=render_settings)
+render = GaussianRenderer(cameras=cameras, render_settings=render_settings)
 
 theta = float(annos['theta'])
 azim = float(annos['azimuth'])
