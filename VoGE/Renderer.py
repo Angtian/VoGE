@@ -13,7 +13,6 @@ class Fragments(object):
     vert_weight: torch.Tensor  # [k, M]
     vert_index: torch.Tensor  # [k, M]
     valid_num: torch.Tensor  # [k]
-    vert_hit_length: torch.Tensor  # [k, M]
 
     def __init__(self, vert_weight, vert_index, valid_num, vert_hit_length):
         self.vert_weight = vert_weight
@@ -51,46 +50,33 @@ class Fragments(object):
 
 
 class GaussianRenderSettings:
-    __slots__ = ['rasterizer_type',
-                 'batch_size',
-                 'image_size',
+    __slots__ = ['image_size',
                  'max_assign',
                  'thr_activation',
                  'absorptivity',
                  'inverse_sigma',
                  'principal',
-                 'use_multi_gpus',
                  'max_point_per_bin']
 
     def __init__(self,
                  image_size: Union[int, Tuple[int, int]] = 256,
-                 rasterizer_type: str = 'standard',
-                 batch_size: int = 20000,
                  max_assign: int = 20,
                  thr_activation: float = 0.01,
                  absorptivity: float = 1,
                  inverse_sigma: bool = False,
-                 principal: Union[None, Tuple[int, int]] = None,
-                 use_multi_gpus: Union[None, str, List[torch.device], Tuple[torch.device], bool] = None,
-                 max_point_per_bin: Union[None, int] = None):
+                 principal: Union[None, Tuple[int, int], Tuple[float, float]] = None,
+                 max_point_per_bin: Union[None, int] = None,
+                 **kwargs):
+        
         if isinstance(image_size, int):
             image_size = (image_size, image_size)
 
-        if isinstance(use_multi_gpus, bool):
-            if use_multi_gpus:
-                use_multi_gpus = 'All'
-            else:
-                use_multi_gpus = None
-
         self.image_size = image_size
-        self.batch_size = batch_size
-        self.rasterizer_type = rasterizer_type
         self.max_assign = max_assign
         self.thr_activation = thr_activation
         self.absorptivity = absorptivity
         self.inverse_sigma = inverse_sigma
         self.principal = principal
-        self.use_multi_gpus = use_multi_gpus
         self.max_point_per_bin = max_point_per_bin
 
     def __getitem__(self, item):
@@ -125,7 +111,7 @@ class GaussianRenderer(nn.Module):
         map_size = self.render_settings['image_size']
 
         if self.render_settings['principal'] is None:
-            principal = (map_size[0] // 2, map_size[1] // 2)
+            principal = (self.cameras.principal_point[0][1].item(), self.cameras.principal_point[0][0].item())
         else:
             principal = self.render_settings['principal']
         rays = get_ray_camera_space(map_size, principal, focal=self.cameras.focal_length, device=self.device)
