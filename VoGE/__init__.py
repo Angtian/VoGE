@@ -1,4 +1,4 @@
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 
 # from .Rasterizer import Fragments, GaussianRasterizationSettings, GaussianRasterizer, interpolate_attr, get_silhouette, to_colored_background, to_white_background
