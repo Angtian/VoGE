@@ -63,8 +63,9 @@ The in wild object pose estimation experiment using NeMo pipeline will be releas
 
 ## Documentation
 
-Read the [**documentation**](https://github.com/Angtian/VoGE/blob/main/Documentation.md).
+### Read the [documentation](https://github.com/Angtian/VoGE/blob/main/Documentation.md).
 
+### Quick Start
 
 
 <!-- ## Understand the Code -->
