@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import imageio
 from pytorch3d.renderer.blending import softmax_rgb_blend, hard_rgb_blend, BlendParams
 from PIL import Image
-from VoGE.MeshConverter import Cuboid
+from VoGE.Converter import Cuboid
 import os
 
 
