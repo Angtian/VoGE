@@ -23,38 +23,31 @@ def cuboid_gauss(x_range, y_range, z_range, number_vertices, percentage=0.5, col
     zn = z_samples.size
 
     out_vertices = []
-    counts = [yn * xn, yn * xn, zn * xn, zn * xn, zn * yn, zn * yn]
-    base_idx = 0
+    counts = [yn * xn, yn * xn, (zn - 2) * (xn - 1), (zn - 2) * (xn - 1), (zn - 2) * (yn - 1), (zn - 2) * (yn - 1), ]
+
     for n in range(yn):
         for m in range(xn):
             out_vertices.append((x_samples[m], y_samples[n], z_samples[0]))
-    base_idx += yn * xn
 
     for n in range(yn):
         for m in range(xn):
             out_vertices.append((x_samples[m], y_samples[n], z_samples[-1]))
-    base_idx += yn * xn
 
     for n in range(1, zn - 1):
         for m in range(xn - 1):
             out_vertices.append((x_samples[m], y_samples[0], z_samples[n]))
-    base_idx += zn * xn
 
     for n in range(1, zn - 1):
         for m in range(1, xn):
             out_vertices.append((x_samples[m], y_samples[-1], z_samples[n]))
-    base_idx += zn * xn
 
     for n in range(1, zn - 1):
         for m in range(1, yn):
             out_vertices.append((x_samples[0], y_samples[m], z_samples[n]))
-    base_idx += zn * yn
-
     for n in range(1, zn - 1):
         for m in range(yn - 1):
             out_vertices.append((x_samples[-1], y_samples[m], z_samples[n]))
-    base_idx += zn * yn
-    
+
     sigma = (edge_length ** 2) / (2 * np.log(1 / percentage)) + 1e-10
     isigma = 1 / sigma
 
@@ -72,7 +65,6 @@ def cuboid_gauss(x_range, y_range, z_range, number_vertices, percentage=0.5, col
                               sigmas=torch.from_numpy(np.ones(len(out_vertices)) * isigma).type(torch.float32))
     else:
         return np.array(out_vertices), np.ones(len(out_vertices)) * isigma
-
 
 
 def cuboid_mesh(x_range, y_range, z_range, number_vertices, colors=None, as_obj=False):
