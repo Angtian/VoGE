@@ -2,8 +2,8 @@
 
 We are still working on the documentation.
 
-### [VoGE Renderer](https://github.com/Angtian/VoGE/blob/main/VoGE/Renderer.py)
-**class VoGE.Renderer.GaussianRenderer(cameras: pytorch3d.cameras, render_settings: GaussianRenderSettings)(gmeshes, R=None, T=None)**
+## [VoGE Renderer](https://github.com/Angtian/VoGE/blob/main/VoGE/Renderer.py)
+### class VoGE.Renderer.GaussianRenderer(cameras: pytorch3d.cameras, render_settings: GaussianRenderSettings)(gmeshes, R=None, T=None)
 
 The VoGE renderer, currently, only support non-batched inputs.
 
@@ -28,7 +28,7 @@ A fragments contains:
 - valid_num \[h, w\] gives how many Gaussian kernels on that pixel is consider valid.
 
 
-**class VoGE.Renderer.GaussianRenderSettings(image_size: Union[int, Tuple[int, int]] = 256, max_assign: int = 20, thr_activation: float = 0.01, absorptivity: float = 1, inverse_sigma: bool = False, principal: Union[None, Tuple[int, int], Tuple[float, float]] = None, max_point_per_bin: Union[None, int] = None)**
+### class VoGE.Renderer.GaussianRenderSettings(image_size: Union[int, Tuple[int, int]] = 256, max_assign: int = 20, thr_activation: float = 0.01, absorptivity: float = 1, inverse_sigma: bool = False, principal: Union[None, Tuple[int, int], Tuple[float, float]] = None, max_point_per_bin: Union[None, int] = None)
 
 #### Init
 *Parameters:*
@@ -41,7 +41,7 @@ A fragments contains:
 - principal: the principle point of camera, if None, will use the principle from the cameras.
 - max_point_per_bin: the maximum number of Gaussians allowed in each bin in the coarse rasterization stage. max_point_per_bin=-1 removes the coarse rasterization stage. max_point_per_bin=None attempts to set with a heuristic.  
 
-**VoGE.Renderer.interpolate_attr(fragments: Fragments, vert_attr: torch.Tensor)**
+### VoGE.Renderer.interpolate_attr(fragments: Fragments, vert_attr: torch.Tensor)
 
 Interpolate the render result into a attribute map (gives RGB image when input the RGB colors of each Gaussians).
 
@@ -50,7 +50,7 @@ Interpolate the render result into a attribute map (gives RGB image when input t
 - fragments: fragments returned by the VoGE renderer.
 - vert_attr: attribute of each Gaussian kernels, have a shape with (V, C).
 
-**VoGE.Renderer.to_colored_background(fragments: Fragments, colors: torch.Tensor, background_color: Union[torch.Tensor, tuple, list] = (1, 1, 1), thr: float = -1)**
+### VoGE.Renderer.to_colored_background(fragments: Fragments, colors: torch.Tensor, background_color: Union[torch.Tensor, tuple, list] = (1, 1, 1), thr: float = -1)
 
 Interpolate the render result into an RGB image with a specific background color.
 
@@ -61,6 +61,6 @@ Interpolate the render result into an RGB image with a specific background color
 - background_color: background color, tuple of 3 ints or 1x3 torch.Tensor.
 - thr: thr=-1 for soft adding the background color, thr > 0 for a hard mask when adding the background.
 
-**VoGE.Renderer.to_white_background(fragments: Fragments, colors: torch.Tensor, thr: float = -1)**
+### VoGE.Renderer.to_white_background(fragments: Fragments, colors: torch.Tensor, thr: float = -1)
 
 A specific case for to_colored_background as the background_color=(1, 1, 1).
