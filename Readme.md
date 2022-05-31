@@ -24,6 +24,11 @@ git clone https://github.com/Angtian/VoGE.git
 cd VoGE
 python setup.py install
 ```
+or
+```
+pip install git+https://github.com/Angtian/VoGE.git
+```
+
 Once successfully install VoGE, it should be able to include in your python:
 ```
 import VoGE
