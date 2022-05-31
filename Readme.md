@@ -32,6 +32,9 @@ import VoGE
 |-------------------|----------------|
 | [Single-viewed Texture Extraction](https://github.com/Angtian/VoGE/blob/main/demo/ExtractTexture.py) | [Shape and Color Fitting using VoGE](https://github.com/Angtian/VoGE/blob/main/demo/ShapeFitting.py)|
 
+|<img src="https://github.com/Angtian/VoGE/blob/main/images/RenderWithLIght.gif" width="320"/>|<img src="https://github.com/Angtian/VoGE/blob/main/images/PointCloud.png" width="320"/>|
+|-------------------|----------------|
+| [Change Lighting for Rendering Bunny](https://github.com/Angtian/VoGE/blob/main/demo/ExtractTexture.py) | Rendering PointCloud|
 
 ## Documentation
 
