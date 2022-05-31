@@ -23,9 +23,9 @@ The VoGE renderer, currently, only support non-batched inputs.
 *Returns:*
 
 A fragments contains:
-- vert_index (H, W, M) gives the indices of the set of nearest effective Gaussian kernels. Invalid will filled with -1. M is max_assign set in GaussianRenderSettings.
-- vert_weight (H, W, M) indecates the weight of contribution for the corresponded kernel on this pixel.
-- valid_num (H, W) gives how many Gaussian kernels on that pixel is consider valid.
+- vert_index: (H, W, M) gives the indices of the set of nearest effective Gaussian kernels. Invalid will filled with -1. M is max_assign set in GaussianRenderSettings.
+- vert_weight: (H, W, M) indecates the weight of contribution for the corresponded kernel on this pixel.
+- valid_num: (H, W) gives how many Gaussian kernels on that pixel is consider valid.
 
 
 ### class VoGE.Renderer.GaussianRenderSettings(image_size: Union[int, Tuple[int, int]] = 256, max_assign: int = 20, thr_activation: float = 0.01, absorptivity: float = 1, inverse_sigma: bool = False, principal: Union[None, Tuple[int, int], Tuple[float, float]] = None, max_point_per_bin: Union[None, int] = None)
@@ -48,7 +48,7 @@ Interpolate the render result into a attribute map (gives RGB image when input t
 *Parameters:*
 
 - fragments: fragments returned by the VoGE renderer.
-- vert_attr: attribute of each Gaussian kernels, have a shape with (V, C).
+- vert_attr: attribute of each Gaussian kernels, have a shape with (N, C).
 
 *Returns:*
 
@@ -61,7 +61,7 @@ Interpolate the render result into an RGB image with a specific background color
 *Parameters:*
 
 - fragments: fragments returned by the VoGE renderer.
-- colors: color of each Gaussian kernels, have a shape with (V, 3).
+- colors: color of each Gaussian kernels, have a shape with (N, 3).
 - background_color: background color, tuple of 3 ints or 1x3 torch.Tensor.
 - thr: thr=-1 for soft adding the background color, thr > 0 for a hard mask when adding the background.
 
@@ -77,9 +77,48 @@ A specific case for to_colored_background as the background_color=(1, 1, 1).
 *Parameters:*
 
 - fragments: fragments returned by the VoGE renderer.
-- colors: color of each Gaussian kernels, have a shape with (V, 3).
+- colors: color of each Gaussian kernels, have a shape with (N, 3).
 - thr: thr=-1 for soft adding the background color, thr > 0 for a hard mask when adding the background.
 
 *Returns:*
 
 - RGB image: torch.Tensor with shape (H, W, 3)
+
+
+## [Gaussian Ellipsoids](https://github.com/Angtian/VoGE/blob/main/VoGE/Meshes.py)
+Since the Gaussian ellipsoids takes the equalvalent role as Meshes in the PyTorch3D meshes renderer, for convenience, here we name them GaussianMeshes, though they are not real meshes.
+
+### class VoGE.Meshes.GaussianMeshesNaive(verts, sigmas)
+
+The hook version of Gaussian Ellipsoids (do not store parameters). The class will return the reference of original verts and sigmas, so the gradient will compute toward the input in initalization.
+
+#### Init
+
+*Parameters:*
+
+- verts: torch.Tensor, (N, 3), center of Gaussian Ellipsoids.
+- sigmas: torch.Tensor, (N, ) or (N, 3, 3), spacial varience of the Gaussian Ellipsoids, 1-dims tensor for isotropic Gaussian, 3-dims tensor for anisotropic.
+
+#### Call
+
+*Returns:*
+- verts: reference of the input verts in initalization.
+- sigmas: reference of the input sigmas in initalization.
+
+
+### class VoGE.Meshes.GaussianMeshes(verts, sigmas)
+
+The nn.Module version of Gaussian Ellipsoids. The verts and sigmas will be copied and stored as nn.Parameter. Gradient will compute toward parameters store inside this class.
+
+#### Init
+
+*Parameters:*
+
+- verts: torch.Tensor, (N, 3), center of Gaussian Ellipsoids.
+- sigmas: torch.Tensor, (N, ) or (N, 3, 3), spacial varience of the Gaussian Ellipsoids, 1-dims tensor for isotropic Gaussian, 3-dims tensor for anisotropic.
+
+#### Call
+
+*Returns:*
+- verts: inside parameter verts.
+- sigmas: inside parameter sigmas.
