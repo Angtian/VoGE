@@ -44,7 +44,7 @@ from pytorch3d.renderer import (
 )
 
 from VoGE.Renderer import GaussianRenderer, GaussianRenderSettings, interpolate_attr, to_white_background, get_silhouette
-from VoGE.MeshConverter import Converters
+from VoGE.Converter import Converters
 from VoGE.Meshes import GaussianMeshes
 
 # add path for demo utils functions
