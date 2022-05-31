@@ -26,9 +26,9 @@ Once successfully install VoGE, it should be able to include in your python:
 import VoGE
 ```
 
-## To Run VoGE
-
 ## Demos
+
+## Documentation
 
 ## Understand the Code
 
