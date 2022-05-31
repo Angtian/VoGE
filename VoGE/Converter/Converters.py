@@ -121,6 +121,23 @@ def naive_point_cloud_converter(points, percentage=0.5, n_nearest=4, thr_max=2):
         return points, isigma, None
 
 
+def fixed_pointcloud_converter(points, radius, percentage=0.5):
+    if not torch.is_tensor(points):
+        points = torch.from_numpy(points)
+        if not isinstance(radius, float):
+            radius = torch.from_numpy(radius)
+        to_np = True
+    else:
+        to_np = False
+
+    isigma = torch.ones(points.shape[0]) / ((radius ** 2) / (2 * np.log(1 / percentage)) + 1e-10)
+
+    if to_np:
+        return points.numpy(), isigma.numpy(), None
+    else:
+        return points, isigma, None   
+    
+
 def convert_path(source_path, destiny_path, convert_function, filter_=None):
     this_fl_list = os.listdir(source_path)
     os.makedirs(destiny_path, exist_ok=True)
@@ -156,14 +173,22 @@ class ComposedConverter(object):
 
 
 def pytorch3d2gaussian(converter, **kwargs):
-    def wrapper(mesh, **mesh_kwargs):
-        if len(mesh) > 1:
-            mesh = mesh[0]
+    def wrapper(input_, **mesh_kwargs):
+        if isinstance(input_, Meshes):
+            mesh = input_
+            if len(mesh) > 1:
+                mesh = mesh[0]
 
-        verts = mesh.verts_packed().cpu().numpy()
-        faces = mesh.faces_packed().cpu().numpy()
+            verts = mesh.verts_packed().cpu()
+            faces = mesh.faces_packed().cpu()
 
-        verts, sigmas, radians = converter(verts, faces, **kwargs)
+            verts, sigmas, radians = converter(verts, faces, **kwargs)
+        elif isinstance(input_, Pointclouds):
+            pointscloud = input_
+            points = pointscloud.points_packed()
 
-        return GaussianMeshes(torch.from_numpy(verts).type(torch.float32), torch.from_numpy(sigmas).type(torch.float32), torch.from_numpy(radians).type(torch.float32) if radians is not None else None, **mesh_kwargs).to(mesh.device)
+            verts, sigmas, radians = converter(points, **kwargs)
+
+        return GaussianMeshes(verts.type(torch.float32), sigmas.type(torch.float32), radians.type(torch.float32) if radians is not None else None, **mesh_kwargs).to(input_.device)
     return wrapper
+
