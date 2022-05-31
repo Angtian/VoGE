@@ -28,7 +28,9 @@ import VoGE
 
 ## Demos
 
-<img src="https://github.com/Angtian/VoGE/blob/6d3407ef3e99729bf457863d54884487c02e6116/images/TextureExtraction.gif" width="400"/>
+|<img src="https://github.com/Angtian/VoGE/blob/main/images/TextureExtraction.gif" width="320"/>|<img src="https://github.com/Angtian/VoGE/blob/main/images/shape_fitting.gif" width="320"/>|
+|-------------------|----------------|
+| [Single-viewed Texture Extraction](https://github.com/Angtian/VoGE/blob/main/demo/ExtractTexture.py) | [Shape and Color Fitting using VoGE](https://github.com/Angtian/VoGE/blob/main/demo/ShapeFitting.py)|
 
 
 ## Documentation
