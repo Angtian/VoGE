@@ -36,6 +36,12 @@ import VoGE
 |-------------------|----------------|
 | [Change Lighting for Rendering Bunny](https://github.com/Angtian/VoGE/blob/main/demo/ExtractTexture.py) | Rendering PointCloud|
 
+|<img src="https://github.com/Angtian/VoGE/blob/main/images/OcclusionReasoningVoGE.gif" width="320"/>|<img src="https://github.com/Angtian/VoGE/blob/main/images/OcclusionReasoningSoftRas.gif" width="320"/>|
+|-------------------|----------------|
+| [Using VoGE](https://github.com/Angtian/VoGE/blob/main/demo/ReasonOcclusion.py) | [SoftRas Baseline](https://github.com/Angtian/VoGE/blob/main/demo/ReasonOcclusionPyTorch3D.py) |
+|-------------------|----------------|
+| Single-viewed Occlusion Reasoning for Multi Objects ||
+
 ## Documentation
 
 ## Understand the Code
