@@ -51,7 +51,7 @@ if __name__ == '__main__':
     image_size = (400, 400)
     camera = PerspectiveCameras(focal_length=300, in_ndc=False, device=device, image_size=(image_size, ), principal_point=((image_size[0] // 2, image_size[1] // 2), ), T=T, R=R)
     render_settings = GaussianRenderSettings(max_assign=60, principal=(image_size[0] // 2, image_size[1] // 2), image_size=image_size, max_point_per_bin=1500)
-    renderer = GaussianRenderer(cameras=camera, raster_settings=render_settings)
+    renderer = GaussianRenderer(cameras=camera, render_settings=render_settings)
 
     gmesh = GaussianMeshesNaive(verts=torch.cat((verts + v_base0, verts1 + v_base1), dim=0), sigmas=torch.cat((sigmas, sigmas1), dim=0))
     frag = renderer(gmesh)
