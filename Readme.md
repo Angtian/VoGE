@@ -41,7 +41,9 @@ import VoGE
 | [Using VoGE](https://github.com/Angtian/VoGE/blob/main/demo/ReasonOcclusion.py) | [Baseline: SoftRas](https://github.com/Angtian/VoGE/blob/main/demo/ReasonOcclusionPyTorch3D.py) |
 | Single-viewed Occlusion Reasoning -> | for Multi Objects|
 
-
+|<img src="https://github.com/Angtian/VoGE/blob/main/images/EfficientRepresentation.gif" width="320"/>| ... |
+|-------------------|----------------|
+| [Efficient Cuboid via Optimization](https://github.com/Angtian/VoGE/blob/main/demo/EfficientCuboidViaOptimization.py) | More |
 
 ## Documentation
 
