@@ -217,5 +217,38 @@ A naive pointcloud converter, which returns each Gaussian is correspond to each 
 - sigmas: np.ndarray or torch.Tensor(cpu), (N, 3, 3), spacial variance of each Gaussian
 - None
 
+### VoGE.Converter.Converters.fixed_pointcloud_converter(points, radius, percentage=0.5)
+A naive pointcloud converter, which returns each Gaussian is correspond to each point respectively. The spacial varience compute as a function of the input radius.
+
+*Parameters:*
+
+- points: np.ndarray or torch.Tensor(cpu), (N, 3), points locations of the source mesh.
+- radius: float or torch.Tensor(cpu), (N, ), the radius of each point.
+- percentage: float, a hyper-parameter in the function for computing sigma. Larger gives larger spacial variance of each Gaussian.
+
+*Returns:*
+
+- verts: np.ndarray or torch.Tensor(cpu), (N, 3), center of each Gaussian
+- sigmas: np.ndarray or torch.Tensor(cpu), (N, 3, 3), spacial variance of each Gaussian
+- None
+
+
+### VoGE.Converter.Converters.pytorch3d2gaussian(converter, **kwargs)
+
+A function decorator allows input of converters as pytorch3d.Meshes and output as VoGE.GaussianMeshes.
+
+*Parameters:*
+- converter: python function, the original converter
+- kwargs: args feed into the converter
+
+*Example:*
+```
+convert_function = Converters.pytorch3d2gaussian(Converters.naive_vertices_converter, percentage=0.7)
+gmesh = convert_function(meshes)
+
+convert_function = Converters.pytorch3d2gaussian(Converters.fixed_pointcloud_converter, radius=0.2)
+gmesh = convert_function(pointclouds)
+```
+
 
 
