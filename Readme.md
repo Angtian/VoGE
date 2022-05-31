@@ -66,7 +66,37 @@ The in wild object pose estimation experiment using NeMo pipeline will be releas
 ### Read the [documentation](https://github.com/Angtian/VoGE/blob/main/Documentation.md).
 
 ### Quick Start
+Here we give a example to render a cuboid composed with Gaussian ellispoids:
+```
+from pytorch3d.renderer import PerspectiveCameras, look_at_view_transform
+from VoGE.Converter import Cuboid
+from VoGE.Renderer import GaussianRenderer, GaussianRenderSettings, to_white_background
+import matplotlib.pyplot as plt
 
+device = 'cuda'
+
+# Create gaussians
+gaussians = Cuboid.cuboid_gauss((-1, 1), (-1, 1), (-1, 1), 1000, percentage=0.6, as_obj=True).to(device)
+
+# Create a camera
+camera = PerspectiveCameras(focal_length=300, image_size=((256, 256), ), principal_point=((128, 128), ), device=device)
+
+# Create the renderer
+render_settings = GaussianRenderSettings(image_size=(256, 256), principal=(128, 128), )
+renderer = GaussianRenderer(cameras=camera, render_settings=render_settings)
+
+# Compute camera pose
+R, T = look_at_view_transform(dist=6, elev=10, azim=70, device=device)
+
+# Render the Gaussians
+frag = renderer(gaussians, R=R, T=T)
+
+# Convert into a image
+img = to_white_background(frag, (gaussians.verts + 1) / 3).clamp(0, 1)
+
+plt.imshow(img.detach().cpu().numpy())
+plt.show()
+```
 
 
 ## Cite
