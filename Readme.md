@@ -68,7 +68,6 @@ The in wild object pose estimation experiment using NeMo pipeline will be releas
 ### Quick Start
 
 
-<!-- ## Understand the Code -->
 
 ## Cite
 
