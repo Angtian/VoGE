@@ -73,17 +73,12 @@ if __name__ == '__main__':
     camera = PerspectiveCameras(focal_length=200, in_ndc=False, device=device, image_size=(image_size, ), principal_point=((image_size[0] // 2, image_size[1] // 2), ))
 
     render_settings = GaussianRenderSettings(max_assign=50, principal=(image_size[0] // 2, image_size[1] // 2), image_size=image_size, max_point_per_bin=1500)
-    renderer = GaussianRenderer(cameras=camera, raster_settings=render_settings)
+    renderer = GaussianRenderer(cameras=camera, render_settings=render_settings)
 
     render_settings1 = GaussianRenderSettings(max_assign=verts.shape[0], principal=(image_size[0] // 2, image_size[1] // 2), image_size=image_size, max_point_per_bin=-1, thr_activation=0)
-    renderer1 = GaussianRenderer(cameras=camera, raster_settings=render_settings1)
+    renderer1 = GaussianRenderer(cameras=camera, render_settings=render_settings1)
 
     idx_ = torch.from_numpy(colors_0).to(device).unsqueeze(1).expand(-1, kn, -1).contiguous().view(-1, 6)
-
-    # img = torch.einsum("hwk, kc->hwc", idx_map, rgb_mapping)
-    #
-    # plt.imshow(img.detach().cpu().numpy())
-    # plt.show()
 
     optimizer = torch.optim.Adam([sig_ori], lr=0.02, betas=(0.8, 0.6))
     criteria = torch.nn.L1Loss()
