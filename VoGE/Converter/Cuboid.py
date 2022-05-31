@@ -1,7 +1,11 @@
 import numpy as np
+import torch
+
+from VoGE.Meshes import GaussianMeshes
+from pytorch3d.structures import Meshes
 
 
-def cuboid_gauss(x_range, y_range, z_range, number_vertices, percentage=0.5, colors=None):
+def cuboid_gauss(x_range, y_range, z_range, number_vertices, percentage=0.5, colors=None, as_obj=False):
     w, h, d = x_range[1] - x_range[0], y_range[1] - y_range[0], z_range[1] - z_range[0]
     total_area = (w * h + h * d + w * d) * 2
 
@@ -22,33 +26,33 @@ def cuboid_gauss(x_range, y_range, z_range, number_vertices, percentage=0.5, col
     counts = [yn * xn, yn * xn, zn * xn, zn * xn, zn * yn, zn * yn]
     base_idx = 0
 
-    for n in range(yn):
-        for m in range(xn):
+    for n in range(1, yn):
+        for m in range(xn - 1):
             out_vertices.append((x_samples[m], y_samples[n], z_samples[0]))
     base_idx += yn * xn
 
-    for n in range(yn):
-        for m in range(xn):
+    for n in range(yn - 1):
+        for m in range(1, xn):
             out_vertices.append((x_samples[m], y_samples[n], z_samples[-1]))
     base_idx += yn * xn
 
-    for n in range(zn):
-        for m in range(xn):
+    for n in range(1, zn):
+        for m in range(xn -1):
             out_vertices.append((x_samples[m], y_samples[0], z_samples[n]))
     base_idx += zn * xn
 
-    for n in range(zn):
-        for m in range(xn):
+    for n in range(zn - 1):
+        for m in range(1, xn):
             out_vertices.append((x_samples[m], y_samples[-1], z_samples[n]))
     base_idx += zn * xn
 
-    for n in range(zn):
-        for m in range(yn):
+    for n in range(zn - 1):
+        for m in range(1, yn):
             out_vertices.append((x_samples[0], y_samples[m], z_samples[n]))
     base_idx += zn * yn
 
-    for n in range(zn):
-        for m in range(yn):
+    for n in range(1, zn):
+        for m in range(yn - 1):
             out_vertices.append((x_samples[-1], y_samples[m], z_samples[n]))
     base_idx += zn * yn
 
@@ -58,13 +62,21 @@ def cuboid_gauss(x_range, y_range, z_range, number_vertices, percentage=0.5, col
     if colors is not None:
         out_colors = np.concatenate([np.repeat(c[None, :], r, axis=0) for r, c in zip(counts, colors)], axis=0)
 
-        return np.array(out_vertices), np.ones(len(out_vertices)) * isigma, out_colors
+        if as_obj:
+            return GaussianMeshes(verts=torch.from_numpy(np.array(out_vertices)).type(torch.float32),
+                                  sigmas=torch.from_numpy(np.ones(len(out_vertices)) * isigma).type(torch.float32)), out_colors
+        else:
+            return np.array(out_vertices), np.ones(len(out_vertices)) * isigma, out_colors
 
-    return np.array(out_vertices), np.ones(len(out_vertices)) * isigma
+    if as_obj:
+        return GaussianMeshes(verts=torch.from_numpy(np.array(out_vertices)).type(torch.float32),
+                              sigmas=torch.from_numpy(np.ones(len(out_vertices)) * isigma).type(torch.float32))
+    else:
+        return np.array(out_vertices), np.ones(len(out_vertices)) * isigma
 
 
 
-def cuboid_mesh(x_range, y_range, z_range, number_vertices, colors=None):
+def cuboid_mesh(x_range, y_range, z_range, number_vertices, colors=None, as_obj=False):
     w, h, d = x_range[1] - x_range[0], y_range[1] - y_range[0], z_range[1] - z_range[0]
     total_area = (w * h + h * d + w * d) * 2
 
@@ -143,6 +155,16 @@ def cuboid_mesh(x_range, y_range, z_range, number_vertices, colors=None):
     if colors is not None:
         out_colors = np.concatenate([np.repeat(c[None, :], r, axis=0) for r, c in zip(counts, colors)], axis=0)
 
-        return np.array(out_vertices), np.array(out_faces), out_colors
+        if as_obj:
+            return Meshes(verts=[torch.from_numpy(np.array(out_vertices)).type(torch.float32)],
+                          faces=[torch.from_numpy(np.array(out_faces)).type(torch.long)], ), out_colors
+        else:
+            return np.array(out_vertices), np.array(out_faces), out_colors
 
-    return np.array(out_vertices), np.array(out_faces)
+    if as_obj:
+        return Meshes(verts=[torch.from_numpy(np.array(out_vertices)).type(torch.float32)], 
+                      faces=[torch.from_numpy(np.array(out_faces)).type(torch.long)], )
+    else:
+        return np.array(out_vertices), np.array(out_faces)
+        
+        
