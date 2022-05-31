@@ -13,6 +13,7 @@ class Fragments(object):
     vert_weight: torch.Tensor  # [k, M]
     vert_index: torch.Tensor  # [k, M]
     valid_num: torch.Tensor  # [k]
+    vert_hit_length: torch.Tensor  # [k, M]
 
     def __init__(self, vert_weight, vert_index, valid_num, vert_hit_length):
         self.vert_weight = vert_weight
@@ -47,11 +48,6 @@ class Fragments(object):
     def copy(self):
         return Fragments(vert_weight=self.vert_weight.contiguous(), vert_index=self.vert_index.contiguous(),
                          valid_num=self.valid_num.contiguous(), vert_hit_length=self.vert_hit_length.contiguous())
-
-    # def align_to_first(self, n_verts):
-    #     assert len(self.valid_num.shape) == 3, 'Index access is only available when batched.'
-    #     self.vert_index -= torch.arange(self.vert_index.shape[0], device=self.vert_index.device, dtype=self.vert_index.dtype).view(-1, 1, 1, 1) * n_verts
-    #     return self
 
 
 class GaussianRenderSettings:
@@ -104,10 +100,10 @@ class GaussianRenderSettings:
 class GaussianRenderer(nn.Module):
     to_set_args = ['R', 'T', 'focal', 'principal']
 
-    def __init__(self, cameras, raster_settings: Union[dict, GaussianRenderSettings]):
+    def __init__(self, cameras, render_settings: Union[dict, GaussianRenderSettings]):
         super(GaussianRenderer, self).__init__()
         self.cameras = cameras
-        self.raster_settings = raster_settings
+        self.render_settings = render_settings
         self.device = cameras.device
 
     def to(self, device):
@@ -126,12 +122,12 @@ class GaussianRenderer(nn.Module):
 
         verts, sigmas, radians = gmeshes()
 
-        map_size = self.raster_settings['image_size']
+        map_size = self.render_settings['image_size']
 
-        if self.raster_settings['principal'] is None:
+        if self.render_settings['principal'] is None:
             principal = (map_size[0] // 2, map_size[1] // 2)
         else:
-            principal = self.raster_settings['principal']
+            principal = self.render_settings['principal']
         rays = get_ray_camera_space(map_size, principal, focal=self.cameras.focal_length, device=self.device)
 
         transfroms = self.cameras.get_world_to_view_transform()
@@ -150,7 +146,7 @@ class GaussianRenderer(nn.Module):
 
         rotation_ = rotation_.expand(-1, sigmas.shape[1], -1, -1)
 
-        if self.raster_settings['inverse_sigma']:
+        if self.render_settings['inverse_sigma']:
             isigma = 2 * rotation_.transpose(2, 3) @ torch.inverse(sigmas.expand(rotation_.shape[0], -1, -1, -1)) @ rotation_
         else:
             isigma = 2 * rotation_.transpose(2, 3) @ sigmas.expand(rotation_.shape[0], -1, -1, -1) @ rotation_
@@ -158,13 +154,13 @@ class GaussianRenderer(nn.Module):
         # [b, h, w, s]
         sel_idx, sel_len, sel_act, sel_dsd = ray_tracing(
                 self.cameras, verts_transformed.squeeze(0), isigma.squeeze(0), rays,
-                map_size, thr=self.raster_settings['thr_activation'], n_assign=self.raster_settings['max_assign'],
-                max_points_per_bin=self.raster_settings['max_point_per_bin'])
+                map_size, thr=self.render_settings['thr_activation'], n_assign=self.render_settings['max_assign'],
+                max_points_per_bin=self.render_settings['max_point_per_bin'])
         
         sel_idx = sel_idx.clone()
 
         vert_weight, vert_index, valid_num, vert_hit_length = aggregation(sel_idx=sel_idx, sel_act=sel_act, sel_len=sel_len, 
-                                                                        sel_dsd=sel_dsd, occupation_weight=self.raster_settings['absorptivity'])
+                                                                        sel_dsd=sel_dsd, occupation_weight=self.render_settings['absorptivity'])
 
         return Fragments(vert_weight=vert_weight, vert_index=vert_index, valid_num=valid_num, vert_hit_length=vert_hit_length)
 
