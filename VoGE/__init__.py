@@ -5,5 +5,4 @@ __version__ = "0.1.1"
 # from .RasterizeUtils import ind_sel, ind_fill, Batchifier, DataParallelBatchifier
 # from .Meshes import GaussianMeshesNaive, GaussianMeshes
 from . import Meshes, Aggregation, RayTracing, Renderer, Utils
-from .MeshConverter import IO
-from .MeshConverter import Converters
+from .Converter import IO, Converters, Cuboid
