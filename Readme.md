@@ -13,7 +13,8 @@ The VoGE library is written in PyTorch, with some components implemented in CUDA
 - PyTorch3D 0.6
 - Numpy 1.20
 - CUDA 10.2 or 11.3
-Other version of the described library might also usable.
+
+We only list versions of the required packages that have been tested, other version of the described library might also usable.
 
 
 ### Installation
@@ -46,6 +47,14 @@ import VoGE
 |<img src="https://github.com/Angtian/VoGE/blob/main/images/EfficientRepresentation.gif" width="320"/>| ... |
 |-------------------|----------------|
 | [Efficient Cuboid via Optimization](https://github.com/Angtian/VoGE/blob/main/demo/EfficientCuboidViaOptimization.py) | More |
+
+
+
+### In wild object pose Estimation
+
+The in wild object pose estimation experiment using NeMo pipeline will be released in the [NeMo project page](https://github.com/Angtian/NeMo).
+|<img src="https://github.com/Angtian/VoGE/blob/main/images/PoseEstimation0.gif" width="320"/> | <img src="https://github.com/Angtian/VoGE/blob/main/images/PoseEstimation1.gif" width="320"/> |
+|-------------------|----------------|
 
 ## Documentation
 
