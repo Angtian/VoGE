@@ -155,8 +155,67 @@ The nn.Module version of Gaussian Ellipsoids. The verts and sigmas will be copie
 #### Call
 
 *Returns:*
+
 - verts: inside parameter verts.
 - sigmas: inside parameter sigmas.
+
+## [VoGE Converters](https://github.com/Angtian/VoGE/blob/main/VoGE/Converter/Converters.py)
+
+VoGE Converter converts existing 3D representation (meshes or pointclouds) into Gaussian ellipsoids. We will add more converts in future.
+
+### VoGE.Converter.Converters.naive_vertices_converter(vertices, faces, percentage=0.5, max_sig_rate=-1)
+
+A naive mesh converter, which returns each Gaussian is correspond to each vertices of the mesh. The center of each gaussian is place at the location of corresponded vertex. Each Gaussian is isotropic (but different Gaussian can have the different sigmas). Each sigma is compute with a function of distances from its corresponded vertex to adjacent vertices. Normally, the source mesh should be uniformly sampled.
+
+*Parameters:*
+
+- vertices: np.ndarray or torch.Tensor(cpu), (N, 3), vertices locations of the source mesh.
+- faces: np.ndarray or torch.Tensor(cpu), (F, 3), faces of the source mesh.
+- percentage: float, a hyper-parameter in the function for computing sigma. Larger gives larger spacial variance of each Gaussian.
+- max_sig_rate: float, limit the maximum spacial variance to not be large than max_sig_rate of the average value. max_sig_rate=-1 for no limits.
+
+
+*Returns:*
+
+- verts: np.ndarray or torch.Tensor(cpu), (N, 3), center of each Gaussian
+- sigmas: np.ndarray or torch.Tensor(cpu), (N, ), spacial variance of each Gaussian
+- None
+
+### VoGE.Converter.Converters.normal_mesh_converter(vertices, faces, normals, percentage=0.5, shape_ratio=0.5, max_sig_rate=-1, auto_fix=True)
+
+A mesh converter, similar to naive_vertices_converter, but give flattern anisotropic Gaussians along the normal direction for each mesh vertices.
+
+*Parameters:*
+
+- vertices: np.ndarray or torch.Tensor(cpu), (N, 3), vertices locations of the source mesh.
+- faces: np.ndarray or torch.Tensor(cpu), (F, 3), faces of the source mesh.
+- percentage: float, a hyper-parameter in the function for computing sigma. Larger gives larger spacial variance of each Gaussian.
+- shape_ratio: float, determine how flattern each output Gaussian is. Smaller makes more flattern.
+- max_sig_rate: float, limit the maximum spacial variance to not be large than max_sig_rate of the average value. max_sig_rate=-1 for no limits.
+- auto_fix: Avoid potiential error for uninversable matrix keep True.
+
+
+*Returns:*
+
+- verts: np.ndarray or torch.Tensor(cpu), (N, 3), center of each Gaussian
+- sigmas: np.ndarray or torch.Tensor(cpu), (N, 3, 3), spacial variance of each Gaussian
+- None
+
+### VoGE.Converter.Converters.naive_point_cloud_converter(points, percentage=0.5, n_nearest=4, thr_max=2)
+A naive pointcloud converter, which returns each Gaussian is correspond to each point respectively. The spacial varience compute as a function of the distance from that point to n_nearest neighbors.
+
+*Parameters:*
+
+- points: np.ndarray or torch.Tensor(cpu), (N, 3), points locations of the source mesh.
+- percentage: float, a hyper-parameter in the function for computing sigma. Larger gives larger spacial variance of each Gaussian.
+- n_nearest: int, number of nearest points considered during the sigmas computation.
+- thr_max: float, limit the maximum spacial variance to not be large than thr_max of the average value.
+
+*Returns:*
+
+- verts: np.ndarray or torch.Tensor(cpu), (N, 3), center of each Gaussian
+- sigmas: np.ndarray or torch.Tensor(cpu), (N, 3, 3), spacial variance of each Gaussian
+- None
 
 
 
