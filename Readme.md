@@ -42,7 +42,7 @@ import VoGE
 
 |<img src="https://github.com/Angtian/VoGE/blob/main/images/RenderWithLIght.gif" width="320"/>|<img src="https://github.com/Angtian/VoGE/blob/main/images/PointCloud.png" width="320"/>|
 |-------------------|----------------|
-| [Change Lighting for Rendering Bunny](https://github.com/Angtian/VoGE/blob/main/demo/ExtractTexture.py) | Rendering PointCloud|
+| [Change Lighting for Rendering Bunny](https://github.com/Angtian/VoGE/blob/main/demo/ExtractTexture.py) | [Rendering PointCloud](https://github.com/Angtian/VoGE/blob/main/demo/RenderPointClouds.py) |
 
 |<img src="https://github.com/Angtian/VoGE/blob/main/images/OcclusionReasoningVoGE.gif" width="320"/>|<img src="https://github.com/Angtian/VoGE/blob/main/images/OcclusionReasoningSoftRas.gif" width="320"/>|
 |-------------------|----------------|
