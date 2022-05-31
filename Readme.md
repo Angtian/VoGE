@@ -60,7 +60,7 @@ The in wild object pose estimation experiment using NeMo pipeline will be releas
 
 ### VoGE Renderer
 ```
-class GaussianRenderer(cameras: pytorch3d.cameras, render_settings: GaussianRenderSettings)
+class GaussianRenderer(cameras: pytorch3d.cameras, render_settings: GaussianRenderSettings)(gmeshes, R=None, T=None)
 ```
 The VoGE renderer, initlized with a pytorch3d camera (only support PerspectiveCameras) and the render settings.
 
