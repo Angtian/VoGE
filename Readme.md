@@ -59,10 +59,44 @@ The in wild object pose estimation experiment using NeMo pipeline will be releas
 ## Documentation
 
 ### VoGE Renderer
-```
-class GaussianRenderer(cameras: pytorch3d.cameras, render_settings: GaussianRenderSettings)(gmeshes, R=None, T=None)
-```
-The VoGE renderer, initlized with a pytorch3d camera (only support PerspectiveCameras) and the render settings.
+**class GaussianRenderer(cameras: pytorch3d.cameras, render_settings: GaussianRenderSettings)(gmeshes, R=None, T=None)**
+
+The VoGE renderer, currently, only support non-batched inputs.
+
+#### Init
+*Parameters:*
+
+- cameras: pytorch3d camera (only support PerspectiveCameras).
+- render_settings: the render settings, explain below.
+
+#### Call
+
+*Parameters:*
+
+- gmeshes: the Gaussian Ellipsoids set, since it takes equalvalent roles as the mesh in standard mesh rendering process.
+- R, T: the cameras pose. None for using the default R and T from self.cameras.
+
+*Returns:*
+
+A fragments contains:
+- vert_index \[h, w, M\] gives the indices of the set of nearest effective Gaussian kernels. Invalid will filled with -1. M is max_assign set in GaussianRenderSettings.
+- vert_weight \[h, w, M\] indecates the weight of contribution for the corresponded kernel on this pixel.
+- valid_num \[h, w\] gives how many Gaussian kernels on that pixel is consider valid.
+
+
+**class GaussianRenderSettings(image_size: Union[int, Tuple[int, int]] = 256, max_assign: int = 20, thr_activation: float = 0.01, absorptivity: float = 1, inverse_sigma: bool = False, principal: Union[None, Tuple[int, int], Tuple[float, float]] = None, max_point_per_bin: Union[None, int] = None)**
+
+#### Init
+*Parameters:*
+
+- image_size: output image size (h, w).
+- max_assign: gives the number of M nearest effective Gaussians traced and returned.
+- thr_activation: threshold use in the ray tracing stage, only Gaussians have inital weight > thr are consider effective.
+- absorptivity: the absorptivity of the material in volume density aggeration stage, recommand not to change.
+- inverse_sigma: if the input sigmas of Gaussians need to be inverse, by default it is already inversed before feed into the renderer.
+- principal: the principle point of camera, if None, will use the principle from the cameras.
+- max_point_per_bin: the maximum number of Gaussians allowed in each bin in the coarse rasterization stage. max_point_per_bin=-1 removes the coarse rasterization stage. max_point_per_bin=None attempts to set with a heuristic.  
+
 
 
 
