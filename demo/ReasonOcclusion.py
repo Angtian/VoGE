@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from VoGE.MeshConverter import Converters, Cuboid
+from VoGE.Converter import Converters, Cuboid
 from VoGE.Renderer import GaussianRenderSettings, GaussianRenderer, interpolate_attr, to_white_background
 from VoGE.Meshes import GaussianMeshes, GaussianMeshesNaive
 from pytorch3d.renderer import PerspectiveCameras, look_at_view_transform
