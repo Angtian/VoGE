@@ -85,6 +85,40 @@ A specific case for to_colored_background as the background_color=(1, 1, 1).
 - RGB image: torch.Tensor with shape (H, W, 3)
 
 
+## [VoGE Sampler](https://github.com/Angtian/VoGE/blob/main/VoGE/Sampler.py)
+
+VoGE sampler conducts the inverse process of rendering. VoGE sampler convert an input attribute map (feature map or rgb image) into attribute for each Gaussian kernels.
+
+### VoGE.Sampler.sample_features(frag, image, n_vert=None)
+
+The CUDA implementation of VoGE sampling layer (differentiable). It is eqaulvalent to this pytorch code:
+```
+    >>> weight = torch.zeros(image.shape[0:2] + (n_vert, ))
+    >>> weight = ind_fill(weight, frag.vert_index, dim=2, src=frag.vert_weight)
+    >>> sum_weight = torch.sum(weight, dim=(0, 1), keepdim=True)
+    >>> features = weight.view(-1, weight.shape[-1]).T @ image.view(-1, 3) # [H * W, N].T @ [H * W, C] -> [N, C]
+```
+Note the pytorch code consumes lot of memory especially when the number of Gaussians is large, while our CUDA version is very efficient.
+
+*Parameters:*
+
+- frag: fragments returned by the VoGE renderer.
+- image: torch.Tensor, (H, W, C), image or feature map.
+- n_vert: int, number of Gaussian ellipsoids. Default: use the max of frag.vert_index.
+
+*Returns:*
+
+- features: torch.Tensor, (N, C), color or feature for each Gaussian.
+- sum_weight: torch.Tensor, (N, ), accumlative weight sum for each Gaussian.
+
+**Important:** 
+The output features are, by default, not normalized (multiplied by sum_weight). To get the normalized color:
+```
+features = features / sum_weight[..., None]
+```
+
+
+
 ## [Gaussian Ellipsoids](https://github.com/Angtian/VoGE/blob/main/VoGE/Meshes.py)
 Since the Gaussian ellipsoids takes the equalvalent role as Meshes in the PyTorch3D meshes renderer, for convenience, here we name them GaussianMeshes, though they are not real meshes.
 
@@ -102,6 +136,7 @@ The hook version of Gaussian Ellipsoids (do not store parameters). The class wil
 #### Call
 
 *Returns:*
+
 - verts: reference of the input verts in initalization.
 - sigmas: reference of the input sigmas in initalization.
 
@@ -122,3 +157,6 @@ The nn.Module version of Gaussian Ellipsoids. The verts and sigmas will be copie
 *Returns:*
 - verts: inside parameter verts.
 - sigmas: inside parameter sigmas.
+
+
+
