@@ -65,8 +65,10 @@ The in wild object pose estimation experiment using NeMo pipeline will be releas
 
 ### Read the [documentation](https://github.com/Angtian/VoGE/blob/main/Documentation.md).
 
+
+
 ### Quick Start
-Here we give a example to render a cuboid composed with Gaussian ellispoids:
+Here we give a example to render a cuboid using Gaussian ellispoids:
 ```
 from pytorch3d.renderer import PerspectiveCameras, look_at_view_transform
 from VoGE.Converter import Cuboid
