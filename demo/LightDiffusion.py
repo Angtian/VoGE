@@ -38,7 +38,7 @@ color = torch.ones((1, 3)).to(device)
 
 cameras = PerspectiveCameras(focal_length=2000.0, principal_point=((128, 128),), image_size=(render_settings['image_size'],), device=device, )
 
-renderer = GaussianRenderer(cameras=cameras, raster_settings=render_settings)
+renderer = GaussianRenderer(cameras=cameras, render_settings=render_settings)
 
 R, T = look_at_view_transform([6], [0], [10], degrees=True)
 
