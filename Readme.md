@@ -101,7 +101,16 @@ plt.show()
 ```
 
 
-## Cite
+## Citation
+If you find this library is useful, please cite:
+```
+@article{wang2022voge,
+  title={VoGE: A Differentiable Volume Renderer using Gaussian Ellipsoids for Analysis-by-Synthesis},
+  author={Wang, Angtian and Wang, Peng and Sun, Jian and Kortylewski, Adam and Yuille, Alan},
+  journal={arXiv preprint arXiv:2205.15401},
+  year={2022}
+}
+```
 
 
 
