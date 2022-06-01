@@ -1,8 +1,8 @@
-# [VoGE](): A Differentiable Volume Renderer using Neural Gaussian Ellipsoids for Analysis-by-Synthesis
+# [VoGE](https://arxiv.org/abs/2205.15401): A Differentiable Volume Renderer using Neural Gaussian Ellipsoids for Analysis-by-Synthesis
 
 <img src="https://github.com/Angtian/VoGE/blob/main/images/Pipeline.jpg" width="1000"/>
 
-VoGE is a differentiable rendering library conducts differentiable rendering of Gaussian ellipsoids. The rendering process fully follows ray tracing volume densities. VoGE library provide PyTorch APIs for easy usage. For the structure, we refer to [PyTorch3D](https://github.com/facebookresearch/pytorch3d). For the math and details, refer to our [VoGE paper]().
+VoGE is a differentiable rendering library conducts differentiable rendering of Gaussian ellipsoids. The rendering process fully follows ray tracing volume densities. VoGE library provide PyTorch APIs for easy usage. For the structure, we refer to [PyTorch3D](https://github.com/facebookresearch/pytorch3d). For the math and details, refer to our [VoGE paper](https://arxiv.org/abs/2205.15401).
 
 ## Installation
 ### Requirements
