@@ -41,14 +41,18 @@ if (torch.cuda.is_available() and CUDA_HOME is not None) or force_cuda:
 else:
     print('Cuda is not available!')
 
+    
+this_dir = os.path.dirname(os.path.abspath(__file__))
+extensions_dir = os.path.join(this_dir, "VoGE", "csrc")
+
 ext_modules = [
     extension('VoGE._C', [
-        'VoGE/csrc/ext.cpp',
-        'VoGE/csrc/rasterize_coarse/rasterize_coarse.cu',
-        'VoGE/csrc/ray_trace_voge/ray_trace_voge.cu',
-        'VoGE/csrc/sample_voge/sample_voge.cu'
+        os.path.join(extensions_dir, 'ext.cpp'),
+        os.path.join(extensions_dir, 'rasterize_coarse', 'rasterize_coarse.cu'),
+        os.path.join(extensions_dir, 'ray_trace_voge', 'ray_trace_voge.cu'),
+        os.path.join(extensions_dir, 'sample_voge', 'sample_voge.cu')
     ],
-    include_dirs=['VoGE/csrc'],
+    include_dirs=[extensions_dir],
     define_macros=define_macros,
     extra_compile_args=extra_compile_args
     )
