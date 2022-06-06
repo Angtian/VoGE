@@ -222,6 +222,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> RayTraceFineVoge(
     const int bin_size,
     const int K
 ) {
+    at::cuda::CUDAGuard device_guard(mus.device());
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
     
     // bin_points configuration
@@ -332,6 +333,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor> RayTraceFineVogeBackward(
     const at::Tensor& grad_act, // (H, W, K)
     const at::Tensor& grad_dsd // (H, W, K)
 ){
+    at::cuda::CUDAGuard device_guard(mus.device());
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
     const int H = point_idxs.size(0);
