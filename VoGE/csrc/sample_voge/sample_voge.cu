@@ -57,6 +57,7 @@ std::tuple<at::Tensor, at::Tensor> SampleVoge(
     const at::Tensor& vert_index,  // (W, H, K)
     const int num_vert
 ){
+    at::cuda::CUDAGuard device_guard(image.device());
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
     const int H = image.size(0);
@@ -123,7 +124,7 @@ __global__ void SampleVogeBackwardKernel(
         for(int c =0; c < C; ++c){
             sum_grad += grad_feature[idx_point * C + c] * image[(yi * W + xi) * C + c];
         }
-        atomicAdd(grad_vert_weight + (yi * W + xi) * K + k, sum_grad);
+        atomicAdd(grad_vert_weight + pid, sum_grad);
     }
 }
 
@@ -135,6 +136,7 @@ std::tuple<at::Tensor, at::Tensor> SampleVogeBackward(
     const at::Tensor& grad_feature, // (N, C)
     const at::Tensor& grad_weight_sum // (N, )
 ){
+    at::cuda::CUDAGuard device_guard(image.device());
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
     const int H = image.size(0);
