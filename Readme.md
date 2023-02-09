@@ -96,7 +96,7 @@ frag = renderer(gaussians, R=R, T=T)
 # Convert into a image
 img = to_white_background(frag, (gaussians.verts + 1) / 3).clamp(0, 1)
 
-plt.imshow(img.detach().cpu().numpy())
+plt.imshow(img.squeeze(0).detach().cpu().numpy())
 plt.show()
 ```
 
