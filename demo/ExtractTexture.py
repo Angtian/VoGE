@@ -44,7 +44,7 @@ R = torch.bmm(R, rotation_theta(torch.Tensor([theta, ] * R.shape[0])))
 with torch.no_grad():
     frag = render(meshes, R=R, T=T)
 
-get, get_sum = sample_features(frag, im.type(torch.float32).to(device), meshes.verts.shape[0])
+get, get_sum = sample_features(frag, im.type(torch.float32).to(device)[None], meshes.verts.shape[0])
 texture = get / get_sum[:, None] / 255
 texture = texture * 0.7
 
@@ -54,6 +54,6 @@ R, T = look_at_view_transform([dist], [elev], [azim - np.pi / 6], degrees=False)
 R = torch.bmm(R, rotation_theta(torch.Tensor([theta, ] * R.shape[0])))
 with torch.no_grad():
     frag = render(meshes, R=R, T=T)
-img_ = to_white_background(frag, texture)
+img_ = to_white_background(frag, texture).squeeze(0)
 
-Image.fromarray(torch.min(img_ * 255, torch.full_like(img_, 255)).cpu().numpy().astype(np.uint8)).show()
+Image.fromarray((img_.clamp(min=0, max=1) * 255).cpu().numpy().astype(np.uint8)).show()

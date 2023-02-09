@@ -55,4 +55,4 @@ with torch.no_grad():
     output_light = light.diffuse(normals=normals_map)
     img = output_light
 
-Image.fromarray((img * 255).cpu().numpy().astype(np.uint8)).show()
+Image.fromarray((img * 255).squeeze(0).cpu().numpy().astype(np.uint8)).show()

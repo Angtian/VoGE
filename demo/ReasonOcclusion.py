@@ -12,7 +12,7 @@ import os
 
 
 def save_image(get, save_name):
-    get = get.clamp(min=0, max=1)[..., :3].detach().cpu().numpy() * 255
+    get = get.clamp(min=0, max=1)[0, ..., :3].detach().cpu().numpy() * 255
     Image.fromarray(get.astype(np.uint8)).save(save_name)
 
 

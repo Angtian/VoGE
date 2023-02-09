@@ -42,8 +42,7 @@ cameras.T = T.to(device)
 
 with torch.no_grad():
     frag = renderer(meshes)
-
-    img = to_white_background(frag.copy(), color)
+    img = to_white_background(frag.copy(), color).squeeze(0)
 
 print(img.max())
 Image.fromarray((img * 255).cpu().numpy().astype(np.uint8)).show()

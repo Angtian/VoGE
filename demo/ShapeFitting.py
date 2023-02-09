@@ -214,7 +214,7 @@ src_mesh = ico_sphere(4, device)
 def gauss_renderer(gmesh_, R, T, color=None):
     frag_ = render(gmesh_, R=R, T=T)
     
-    return torch.cat((interpolate_attr(frag_, color) if color is not None else torch.ones(frag_.vert_weight.shape[0:-1] + (3, )).to(frag_.vert_weight.device), get_silhouette(frag_).unsqueeze(-1)), dim=-1)
+    return torch.cat((interpolate_attr(frag_, color).squeeze(0) if color is not None else torch.ones_like(gmesh_.verts).to(frag_.vert_weight.device), get_silhouette(frag_).squeeze(0).unsqueeze(-1)), dim=-1)
 
 render_settings = GaussianRenderSettings(batch_size=-1, image_size=(128, 128), principal=(64, 64), max_assign=25, max_point_per_bin=-1)
 

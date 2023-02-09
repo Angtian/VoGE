@@ -39,7 +39,7 @@ with torch.no_grad():
     R, T = look_at_view_transform(3.5, 10, 0, device=device)
 
     frag = renderer(gmesh, R=R, T=T)
-    img = to_white_background(frag, rgb).clamp(0, 1)
+    img = to_white_background(frag, rgb).clamp(0, 1).squeeze(0)
 
 plt.imshow(img.detach().cpu().numpy())
 plt.show()

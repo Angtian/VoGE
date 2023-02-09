@@ -127,9 +127,9 @@ if __name__ == '__main__':
                 frag = renderer1(gmesh, R=R, T=T)
                 g_idx_map = interpolate_attr(frag, idx_)
 
-                img = torch.einsum("hwk, kc->hwc", g_idx_map, rgb_mapping)
+                img = torch.einsum("bhwk, kc->bhwc", g_idx_map, rgb_mapping)
 
-                get = img.clamp(min=0, max=1)[..., :3].detach().cpu().numpy() * 255
+                get = img.clamp(min=0, max=1)[..., :3].squeeze(0).detach().cpu().numpy() * 255
 
                 out_images.append(get.astype(np.uint8))
 
@@ -146,9 +146,9 @@ if __name__ == '__main__':
             frag = renderer1(gmesh, R=R, T=T)
             g_idx_map = interpolate_attr(frag, idx_)
 
-            img = torch.einsum("hwk, kc->hwc", g_idx_map, rgb_mapping)
+            img = torch.einsum("bhwk, kc->bhwc", g_idx_map, rgb_mapping)
 
-            get = img.clamp(min=0, max=1)[..., :3].detach().cpu().numpy() * 255
+            get = img.clamp(min=0, max=1)[..., :3].squeeze(0).detach().cpu().numpy() * 255
 
             out_images.append(get.astype(np.uint8))
 
@@ -161,9 +161,9 @@ if __name__ == '__main__':
             frag = renderer1(gmesh, R=R, T=T)
             g_idx_map = interpolate_attr(frag, idx_)
 
-            img = torch.einsum("hwk, kc->hwc", g_idx_map, rgb_mapping)
+            img = torch.einsum("bhwk, kc->bhwc", g_idx_map, rgb_mapping)
 
-            get = img.clamp(min=0, max=1)[..., :3].detach().cpu().numpy() * 255
+            get = img.clamp(min=0, max=1)[..., :3].squeeze(0).detach().cpu().numpy() * 255
 
             out_images.append(get.astype(np.uint8))
 
@@ -176,9 +176,9 @@ if __name__ == '__main__':
             frag = renderer1(gmesh, R=R, T=T)
             g_idx_map = interpolate_attr(frag, idx_)
 
-            img = torch.einsum("hwk, kc->hwc", g_idx_map, rgb_mapping)
+            img = torch.einsum("bhwk, kc->bhwc", g_idx_map, rgb_mapping)
 
-            get = img.clamp(min=0, max=1)[..., :3].detach().cpu().numpy() * 255
+            get = img.clamp(min=0, max=1)[..., :3].squeeze(0).detach().cpu().numpy() * 255
 
             out_images.append(get.astype(np.uint8))
 
@@ -193,9 +193,9 @@ if __name__ == '__main__':
             frag = renderer1(gmesh, R=R, T=T)
             g_idx_map = interpolate_attr(frag, idx_ * mask1)
 
-            img = torch.einsum("hwk, kc->hwc", g_idx_map, rgb_mapping)
+            img = torch.einsum("bhwk, kc->bhwc", g_idx_map, rgb_mapping)
 
-            get = img.clamp(min=0, max=1)[..., :3].detach().cpu().numpy() * 255
+            get = img.clamp(min=0, max=1)[..., :3].squeeze(0).detach().cpu().numpy() * 255
 
             out_images.append(get.astype(np.uint8))
             out_images.append(get.astype(np.uint8))
