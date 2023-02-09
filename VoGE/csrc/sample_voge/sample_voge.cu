@@ -24,6 +24,7 @@ __global__ void SampleVogeKernel(
     const int32_t* vert_index, 
     const int N,
     const int C,
+    const int B,
     const int H,
     const int W,
     const int K,
@@ -33,13 +34,13 @@ __global__ void SampleVogeKernel(
     const int num_threads = gridDim.x * blockDim.x;
     const int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
-    for (int pid = tid; pid < H * W * K; pid += num_threads) {
-        const int yi = pid / (W * K);
-        const int xi = (pid % (W * K)) / K;
+    for (int pid = tid; pid < B * H * W * K; pid += num_threads) {
+        // const int yi = (pid % (H * W * K)) / (W * K);
+        // const int xi = (pid % (W * K)) / K;
 
         const int idx_point = vert_index[pid];
         const float weight_ = vert_weight[pid];
-        const int pixel_idx = yi * W + xi;
+        const int pixel_idx = pid / K;
 
         if (idx_point == -1){
             continue;
@@ -52,18 +53,19 @@ __global__ void SampleVogeKernel(
 
 
 std::tuple<at::Tensor, at::Tensor> SampleVoge(
-    const at::Tensor& image, // (W, H, C)
-    const at::Tensor& vert_weight, // (W, H, K)
-    const at::Tensor& vert_index,  // (W, H, K)
+    const at::Tensor& image, // (B, W, H, C)
+    const at::Tensor& vert_weight, // (B, W, H, K)
+    const at::Tensor& vert_index,  // (B, W, H, K)
     const int num_vert
 ){
     at::cuda::CUDAGuard device_guard(image.device());
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
-    const int H = image.size(0);
-    const int W = image.size(1);
-    const int C = image.size(2);
-    const int K = vert_weight.size(2);
+    const int B = image.size(0);
+    const int H = image.size(1);
+    const int W = image.size(2);
+    const int C = image.size(3);
+    const int K = vert_weight.size(3);
     const int N = num_vert;
 
     auto float_opts = vert_weight.options().dtype(at::kFloat);
@@ -80,6 +82,7 @@ std::tuple<at::Tensor, at::Tensor> SampleVoge(
         vert_index.contiguous().data_ptr<int32_t>(),
         N,
         C,
+        B,
         H,
         W,
         K,
@@ -96,6 +99,7 @@ __global__ void SampleVogeBackwardKernel(
     const float* vert_weight,
     const int32_t* vert_index, 
     const int C,
+    const int B,
     const int H,
     const int W,
     const int K,
@@ -107,22 +111,22 @@ __global__ void SampleVogeBackwardKernel(
     const int num_threads = gridDim.x * blockDim.x;
     const int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
-    for (int pid = tid; pid < H * W * K; pid += num_threads) {
-        const int yi = pid / (W * K);
-        const int xi = (pid % (W * K)) / K;
-        const int k = pid % K;
+    for (int pid = tid; pid < B * H * W * K; pid += num_threads) {
+        // const int yi = pid / (W * K);
+        // const int xi = (pid % (W * K)) / K;
 
+        const int pixel_idx = pid / K;
         const int idx_point = vert_index[pid];
         const float weight_ = vert_weight[pid];
 
         if (idx_point == -1){
             continue;
         }
-        dotvectoratom(weight_, grad_feature + idx_point * C, grad_image + (yi * W + xi) * C, C);
+        dotvectoratom(weight_, grad_feature + idx_point * C, grad_image + pixel_idx * C, C);
         
         float sum_grad = grad_weight_sum[idx_point];
         for(int c =0; c < C; ++c){
-            sum_grad += grad_feature[idx_point * C + c] * image[(yi * W + xi) * C + c];
+            sum_grad += grad_feature[idx_point * C + c] * image[pixel_idx * C + c];
         }
         atomicAdd(grad_vert_weight + pid, sum_grad);
     }
@@ -130,24 +134,25 @@ __global__ void SampleVogeBackwardKernel(
 
 
 std::tuple<at::Tensor, at::Tensor> SampleVogeBackward(
-    const at::Tensor& image, // (W, H, C)
-    const at::Tensor& vert_weight, // (W, H, K)
-    const at::Tensor& vert_index,  // (W, H, K)
+    const at::Tensor& image, // (B, W, H, C)
+    const at::Tensor& vert_weight, // (B, W, H, K)
+    const at::Tensor& vert_index,  // (B, W, H, K)
     const at::Tensor& grad_feature, // (N, C)
     const at::Tensor& grad_weight_sum // (N, )
 ){
     at::cuda::CUDAGuard device_guard(image.device());
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
-    const int H = image.size(0);
-    const int W = image.size(1);
-    const int C = image.size(2);
-    const int K = vert_weight.size(2);
+    const int B = image.size(0);
+    const int H = image.size(1);
+    const int W = image.size(2);
+    const int C = image.size(3);
+    const int K = vert_weight.size(3);
     
     auto float_opts = vert_weight.options().dtype(at::kFloat);
 
-    at::Tensor grad_image = at::zeros({H, W, C}, float_opts);
-    at::Tensor grad_vert_weight = at::zeros({H, W, K}, float_opts);
+    at::Tensor grad_image = at::zeros({B, H, W, C}, float_opts);
+    at::Tensor grad_vert_weight = at::zeros({B, H, W, K}, float_opts);
 
     const size_t blocks = 1024;
     const size_t threads = 64;
@@ -157,6 +162,7 @@ std::tuple<at::Tensor, at::Tensor> SampleVogeBackward(
         vert_weight.contiguous().data_ptr<float>(),
         vert_index.contiguous().data_ptr<int32_t>(),
         C,
+        B,
         H,
         W,
         K,

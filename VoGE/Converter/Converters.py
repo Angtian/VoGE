@@ -4,6 +4,7 @@ import torch
 from VoGE.Meshes import GaussianMeshes
 from pytorch3d.renderer import look_at_rotation
 from VoGE.Utils import Batchifier
+from pytorch3d.structures import Meshes
 
 
 def get_vert_edge_length(verts, faces, default_l=1e-3):

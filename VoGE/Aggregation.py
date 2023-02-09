@@ -81,10 +81,10 @@ def assign2weight(sel_activation, cross_activation, occupation_weight=1.):
 
 def aggregation(sel_idx: torch.Tensor, sel_act: torch.Tensor, sel_len: torch.Tensor, sel_dsd: torch.Tensor, occupation_weight: float=1.):
     """
-    :param sel_idx: [w, h, M] vertices indexs along rays
-    :param sel_act: [w, h, M] hit activations along rays
-    :param sel_len: [w, h, M] hit length along rays
-    :param sel_dsd: [w, h, M] eaualvalent isigma along the ray -> D.T @ isigmas @ D
+    :param sel_idx: [b, w, h, M] vertices indexs along rays
+    :param sel_act: [b, w, h, M] hit activations along rays
+    :param sel_len: [b, w, h, M] hit length along rays
+    :param sel_dsd: [b, w, h, M] eaualvalent isigma along the ray -> D.T @ isigmas @ D
     :param occupation_weight: float, the weight when calculating mutual occlusion. In the base function ( exp(o_weight * x) ) of when calculating T(tor(x))
     :return: weight matrix: [n(optional), w, h, M]: torch.float32 vertices weight at each location
              index matrix: [n(optional), w, h, M]: torch.int

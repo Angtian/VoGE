@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <torch/extension.h>
@@ -24,6 +23,8 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor> RayTraceFineVogeBackward(
     const at::Tensor& grad_act, // (H, W, K)
     const at::Tensor& grad_dsd // (H, W, K)
 );
+
+
 #else
     AT_ERROR("Not compiled with GPU support");
 #endif

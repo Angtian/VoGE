@@ -38,7 +38,7 @@ __device__ inline float Innerdot3d(
 }
 
 
-__device__ void inline Innerdot3dBackward(
+__device__ inline void Innerdot3dBackward(
     const float grad_in,
     const float* target_a, // (P, 3)
     const float* target_b, // (P, 3 * 3)
@@ -135,23 +135,24 @@ __device__ void inline vectoratom(
 __global__ void RayTraceFineVogeKernel(
     const float* isigmas, // (P, 3, 3)
     const float* mus, // (P, 3)
-    const float* rays, // (H, W, 3)
+    const float* rays, // (B, H, W, 3)
     const int32_t* bin_points, // (BH, BW, T)
     const float thr_act, // -log(thr + 1e-10)
     const int bin_size, 
     const int BH, // num_bins y
     const int BW, // num_bins x
+    const int B,
     const int M,
     const int K,
     const int H,
     const int W,
-    int32_t* point_idxs, // [W, H, K]
-    float* total_len, // [W, H, K]
-    float* total_act, // [W, H, K]
-    float* total_dsd // [W, H, K]
+    int32_t* point_idxs, // [B, W, H, K]
+    float* total_len, // [B, W, H, K]
+    float* total_act, // [B, W, H, K]
+    float* total_dsd // [B, W, H, K]
 ){
     
-    const int num_pixels = BH * BW * bin_size * bin_size;
+    const int num_pixels = B * BH * BW * bin_size * bin_size;
     const int num_threads = gridDim.x * blockDim.x;
     const int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -161,6 +162,8 @@ __global__ void RayTraceFineVogeKernel(
         // into the same bin; this should give them coalesced memory reads when
         // they read from points and bin_points.
         int i = pid;
+        const int bi = i / (BH * BW * bin_size * bin_size);
+        i %= BH * BW * bin_size * bin_size;
         const int by = i / (BW * bin_size * bin_size); 
         i %= BW * bin_size * bin_size;
         const int bx = i / (bin_size * bin_size);
@@ -170,7 +173,7 @@ __global__ void RayTraceFineVogeKernel(
         const int yi = i / bin_size + by * bin_size;
         const int xi = i % bin_size + bx * bin_size;
 
-        const int ray_idx = yi * W + xi;
+        const int ray_idx = bi * W * H + yi * W + xi;
 
         if (yi >= H || xi >= W)
             continue;
@@ -179,7 +182,7 @@ __global__ void RayTraceFineVogeKernel(
         int32_t tmp_ptr;
         
         for (int m = 0; m < M; ++m) {
-            const int idx_point = bin_points[by * BW * M + bx * M + m];
+            const int idx_point = bin_points[bi * BH * BH * M + by * BW * M + bx * M + m];
 
             if (idx_point > -1){
                 float k_sig_k = Innerdot3d(rays, isigmas, rays, ray_idx * 3, idx_point * 9, ray_idx * 3);
@@ -216,8 +219,8 @@ __global__ void RayTraceFineVogeKernel(
 std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> RayTraceFineVoge(
     const at::Tensor& mus,  // (P, 3)
     const at::Tensor& isigmas, // (P, 3, 3)
-    const at::Tensor& rays, // (H, W, 3)
-    const at::Tensor& bin_points, // (BH, BW, M)
+    const at::Tensor& rays, // (B, H, W, 3)
+    const at::Tensor& bin_points, // (B, BH, BW, M)
     const float thr_act, // -log(thr + 1e-10)
     const int bin_size,
     const int K
@@ -226,21 +229,22 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> RayTraceFineVoge(
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
     
     // bin_points configuration
-    const int BH = bin_points.size(0);
-    const int BW = bin_points.size(1);
-    const int M = bin_points.size(2);
+    const int BH = bin_points.size(1);
+    const int BW = bin_points.size(2);
+    const int M = bin_points.size(3);
     const int P = isigmas.size(0);
 
-    const int H = rays.size(0);
-    const int W = rays.size(1);
+    const int B = rays.size(0);
+    const int H = rays.size(1);
+    const int W = rays.size(2);
 
     auto int_opts = bin_points.options().dtype(at::kInt);
     auto float_opts = mus.options().dtype(at::kFloat);
 
-    at::Tensor point_idxs = at::full({H, W, K}, -1, int_opts);
-    at::Tensor total_len = at::full({H, W, K}, 1e10, float_opts);
-    at::Tensor total_act = at::full({H, W, K}, 1e10, float_opts);
-    at::Tensor total_dsd = at::full({H, W, K}, 0, float_opts);
+    at::Tensor point_idxs = at::full({B, H, W, K}, -1, int_opts);
+    at::Tensor total_len = at::full({B, H, W, K}, 1e10, float_opts);
+    at::Tensor total_act = at::full({B, H, W, K}, 1e10, float_opts);
+    at::Tensor total_dsd = at::full({B, H, W, K}, 0, float_opts);
     if (total_len.numel() == 0.0) {
         AT_CUDA_CHECK(cudaGetLastError());
         return std::make_tuple(point_idxs, total_len, total_act, total_dsd);
@@ -261,6 +265,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> RayTraceFineVoge(
         bin_size,
         BH,
         BW,
+        B,
         M,
         K,
         H,
@@ -278,14 +283,15 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> RayTraceFineVoge(
 __global__ void RayTraceFineVogeBackwardKernel(
     const float* isigmas, // (P, 3, 3)
     const float* mus, // (P, 3)
-    const float* rays, // (H, W, 3)
-    const int32_t* point_idxs, // (H, W, k)
+    const float* rays, // (B, H, W, 3)
+    const int32_t* point_idxs, // (B, H, W, k)
+    const int B,
     const int K,
     const int H,
     const int W,
-    const float* grad_len, // (H, W, K)
-    const float* grad_act, // (H, W, K)
-    const float* grad_dsd, // (H, W, K, 3)
+    const float* grad_len, // (B, H, W, K)
+    const float* grad_act, // (B, H, W, K)
+    const float* grad_dsd, // (B, H, W, K, 3)
         
     float* grad_ray, // (H, W, 3)
     float* grad_mus, // (P, 3)
@@ -294,9 +300,10 @@ __global__ void RayTraceFineVogeBackwardKernel(
     const int num_threads = gridDim.x * blockDim.x;
     const int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
-    for (int pid = tid; pid < H * W * K; pid += num_threads) {
-        const int yi = pid / (W * K);
-        const int xi = (pid % (W * K)) / K;
+    for (int pid = tid; pid < B * H * W * K; pid += num_threads) {
+        // const int bi = pid / (W * H * K);
+        // const int yi = (pid % (W * H * K)) / (W * K);
+        // const int xi = (pid % (W * K)) / K;
 
         const int idx_point = point_idxs[pid];
 
@@ -308,7 +315,7 @@ __global__ void RayTraceFineVogeBackwardKernel(
         const float grad_a = grad_act[pid];
         const float grad_d = grad_dsd[pid];
 
-        const int ray_idx = yi * W + xi;
+        const int ray_idx = pid / K;
 
         float k_sig_k = Innerdot3d(rays, isigmas, rays, ray_idx * 3, idx_point * 9, ray_idx * 3);
         float m_sig_k = Innerdot3d(mus, isigmas, rays, idx_point * 3, idx_point * 9, ray_idx * 3);
@@ -327,23 +334,24 @@ __global__ void RayTraceFineVogeBackwardKernel(
 std::tuple<at::Tensor, at::Tensor, at::Tensor> RayTraceFineVogeBackward(
     const at::Tensor& mus,  // (P, 3)
     const at::Tensor& isigmas, // (P, 3, 3)
-    const at::Tensor& rays, // (H, W, 3)
-    const at::Tensor& point_idxs, // (H, W, K)
-    const at::Tensor& grad_len,  // (H, W, K)
-    const at::Tensor& grad_act, // (H, W, K)
-    const at::Tensor& grad_dsd // (H, W, K)
+    const at::Tensor& rays, // (B, H, W, 3)
+    const at::Tensor& point_idxs, // (B, H, W, K)
+    const at::Tensor& grad_len,  // (B, H, W, K)
+    const at::Tensor& grad_act, // (B, H, W, K)
+    const at::Tensor& grad_dsd // (B, H, W, K)
 ){
     at::cuda::CUDAGuard device_guard(mus.device());
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
-    const int H = point_idxs.size(0);
-    const int W = point_idxs.size(1);
-    const int K = point_idxs.size(2);
+    const int B = point_idxs.size(0);
+    const int H = point_idxs.size(1);
+    const int W = point_idxs.size(2);
+    const int K = point_idxs.size(3);
     const int P = isigmas.size(0);
     
     auto float_opts = mus.options().dtype(at::kFloat);
 
-    at::Tensor grad_ray_out = at::zeros({H, W, 3}, float_opts);
+    at::Tensor grad_ray_out = at::zeros({B, H, W, 3}, float_opts);
     at::Tensor grad_mus_out = at::zeros({P, 3}, float_opts);
     at::Tensor grad_isg_out = at::zeros({P, 3, 3}, float_opts);
 
@@ -355,6 +363,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor> RayTraceFineVogeBackward(
         mus.contiguous().data_ptr<float>(),
         rays.contiguous().data_ptr<float>(),
         point_idxs.contiguous().data_ptr<int32_t>(),
+        B, 
         K,
         H,
         W,

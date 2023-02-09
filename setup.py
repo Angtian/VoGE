@@ -50,7 +50,8 @@ ext_modules = [
         os.path.join(extensions_dir, 'ext.cpp'),
         os.path.join(extensions_dir, 'rasterize_coarse', 'rasterize_coarse.cu'),
         os.path.join(extensions_dir, 'ray_trace_voge', 'ray_trace_voge.cu'),
-        os.path.join(extensions_dir, 'sample_voge', 'sample_voge.cu')
+        os.path.join(extensions_dir, 'sample_voge', 'sample_voge.cu'),
+        os.path.join(extensions_dir, 'voge_ray_tracing_ray', 'voge_ray_tracing_ray.cu')
     ],
     include_dirs=[extensions_dir],
     define_macros=define_macros,
@@ -66,7 +67,7 @@ setup(
     author='AuthorVoGE',
     packages=find_packages(exclude=("demo", "data")),
     license='MIT License',
-    version='0.2.0',
+    version='0.3.0',
     install_requires=INSTALL_REQUIREMENTS,
     ext_modules=ext_modules,
     cmdclass={'build_ext': BuildExtension}
