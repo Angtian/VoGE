@@ -1,4 +1,4 @@
-# [VoGE](https://arxiv.org/abs/2205.15401): A Differentiable Volume Renderer using Neural Gaussian Ellipsoids for Analysis-by-Synthesis
+# [VoGE](https://arxiv.org/abs/2205.15401): A Differentiable Volume Renderer using Neural Gaussian Ellipsoids for Analysis-by-Synthesis [ICLR 2023]
 
 <img src="https://github.com/Angtian/VoGE/blob/main/images/Pipeline.jpg" width="1000"/>
 
