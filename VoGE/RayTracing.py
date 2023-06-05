@@ -31,10 +31,10 @@ def ray_tracing(transforms, points, isigmas, rays, image_size, thr: float, n_ass
 
 
 def convert_to_box(isigmas, thr, z, matrix):
-    # [n, 2, 2]
+    # [b, n, 2, 2]
     get = -np.log(thr) * matrix[:, None, :2, :2] @ torch.inverse(isigmas[:, :, :2, :2]) @ matrix[:, None, :2, :2]
 
-    # [n, 1, 2] @ [n, 2, 2] -> [n, 2]
+    # [b, n, 1, 2] @ [b, n, 2, 2] -> [b, n, 2]
     boxes = (torch.ones((*isigmas.shape[0:2], 1, 2), device=isigmas.device) @ get).pow(.5).squeeze(2) * z.unsqueeze(-1)
     return boxes
 
