@@ -32,10 +32,10 @@ def ray_tracing(transforms, points, isigmas, rays, image_size, thr: float, n_ass
 
 def convert_to_box(isigmas, thr, z, matrix):
     # [n, 2, 2]
-    get = -np.log(thr) * matrix[:, :2, :2] @ torch.inverse(isigmas[:, :2, :2]) @ matrix[:, :2, :2]
+    get = -np.log(thr) * matrix[:, None, :2, :2] @ torch.inverse(isigmas[:, :, :2, :2]) @ matrix[:, None, :2, :2]
 
     # [n, 1, 2] @ [n, 2, 2] -> [n, 2]
-    boxes = (torch.ones((isigmas.shape[0], 1, 2), device=isigmas.device) @ get).pow(.5).squeeze(1) * z.unsqueeze(1)
+    boxes = (torch.ones((*isigmas.shape[0:2], 1, 2), device=isigmas.device) @ get).pow(.5).squeeze(2) * z.unsqueeze(-1)
     return boxes
 
 
@@ -50,21 +50,21 @@ def rasterize_coarse(cameras, points, isigmas, image_size, thr, bin_size, max_po
     transforms = cameras.get_projection_transform().compose(to_ndc_transform)
     points_ndc = -transforms.transform_points(points)
 
-    boxes = convert_to_box(isigmas, thr, -points_ndc[:, -1], transforms.get_matrix())
+    boxes = convert_to_box(isigmas, thr, -points_ndc[..., -1], transforms.get_matrix())
 
     points_ndc[..., 2] = points[..., 2]
 
     if cloud_to_point is None:
-        cloud_to_point = torch.zeros(1, dtype=torch.long).to(points.device)
+        cloud_to_point = torch.arange(points_ndc.shape[0], dtype=torch.long).to(points.device) * points_ndc.shape[1]
     if num_points_per_cloud is None:
-        num_points_per_cloud = torch.ones(1, dtype=torch.long).to(points.device) * points.shape[0]
+        num_points_per_cloud = torch.ones(points_ndc.shape[0], dtype=torch.long).to(points.device) * points.shape[1]
 
     pixels_to_points_idx = _RasterizeCoarse.apply(
-        points_ndc,
+        points_ndc.view(-1, 3),
         cloud_to_point,
         num_points_per_cloud,
         image_size,
-        boxes,
+        boxes.view(-1, 2),
         bin_size,
         max_points_per_bin
     )
