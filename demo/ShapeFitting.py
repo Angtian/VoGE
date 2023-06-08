@@ -218,7 +218,7 @@ def gauss_renderer(gmesh_, R, T, color=None):
 
 render_settings = GaussianRenderSettings(batch_size=-1, image_size=(128, 128), principal=(64, 64), max_assign=25, max_point_per_bin=-1)
 
-camera = PerspectiveCameras(device=device, R=R[None, 1, ...], T=T[None, 1, ...], image_size=((128, 128), ), principal_point=((64, 64), ), focal_length=126)
+camera = PerspectiveCameras(device=device, R=R[None, 1, ...], T=T[None, 1, ...], image_size=((128, 128), ), principal_point=((64, 64), ), focal_length=126, in_ndc=False)
 render = GaussianRenderer(cameras=camera, render_settings=render_settings)
 
 
