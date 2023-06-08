@@ -36,7 +36,7 @@ normals = normals.to(device)
 
 color = torch.ones((1, 3)).to(device)
 
-cameras = PerspectiveCameras(focal_length=2000.0, principal_point=((128, 128),), image_size=(render_settings['image_size'],), device=device, )
+cameras = PerspectiveCameras(focal_length=2000.0, principal_point=((128, 128),), image_size=(render_settings['image_size'],), device=device, in_ndc=False )
 
 renderer = GaussianRenderer(cameras=cameras, render_settings=render_settings)
 
