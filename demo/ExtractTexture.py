@@ -26,7 +26,7 @@ im = torch.from_numpy(np.array(Image.open(image_path)))
 render_settings = GaussianRenderSettings(batch_size=-1, image_size=(256, 672), max_assign=80, )
 
 cameras = PerspectiveCameras(focal_length=1800.0, principal_point=((336, 128),),
-                             image_size=(render_settings['image_size'],), device=device, )
+                             image_size=(render_settings['image_size'],), device=device, in_ndc=False)
 
 render = GaussianRenderer(cameras=cameras, render_settings=render_settings)
 
@@ -45,7 +45,7 @@ with torch.no_grad():
     frag = render(meshes, R=R, T=T)
 
 get, get_sum = sample_features(frag, im.type(torch.float32).to(device)[None], meshes.verts.shape[0])
-texture = get / get_sum[:, None] / 255
+texture = get / (1e-8 + get_sum[:, None]) / 255
 texture = texture * 0.7
 
 print('Finished_texture!')
