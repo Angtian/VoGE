@@ -4,6 +4,7 @@ from VoGE.Utils import Batchifier, DataParallelBatchifier
 import torch
 import torch.nn as nn
 from typing import NamedTuple, Optional, Tuple, Union, List
+from pytorch3d.renderer.implicit.raysampling import NDCMultinomialRaysampler
 
 
 # from pytorch3d.renderer.cameras import CamerasBase
@@ -99,6 +100,7 @@ class GaussianRenderer(nn.Module):
         return self
 
     def forward(self, gmeshes, **kwargs):
+        assert not self.cameras.in_ndc(), 'Got NDC camera. Cameras.in_ndc must be set to false.'
         for k_arg in kwargs.keys():
             if k_arg in self.to_set_args:
                 if isinstance(kwargs[k_arg], torch.Tensor):
@@ -110,36 +112,33 @@ class GaussianRenderer(nn.Module):
 
         map_size = self.render_settings['image_size']
 
+        sigmas = expend_sigma(sigmas)
         if self.render_settings['principal'] is None:
             principal = (self.cameras.principal_point[0][1].item(), self.cameras.principal_point[0][0].item())
         else:
             principal = self.render_settings['principal']
-        rays = get_ray_camera_space(map_size, principal, focal=self.cameras.focal_length, device=self.device)
+        
+        if len(verts.shape) == 2:
+            verts = verts[None]
+        
+        ray_sampler = NDCMultinomialRaysampler(image_width=int(self.render_settings['image_size'][1]), image_height=int(self.render_settings['image_size'][0]), unit_directions=True, n_pts_per_ray=1, min_depth=0, max_depth=10)
+        
+        ray_bundle = ray_sampler(self.cameras, )
+        rays = ray_bundle.directions # (B, H, W, 3)
+        ray_origins = ray_bundle.origins[:, 0, 0, :] # (B, 3)
 
-        transfroms = self.cameras.get_world_to_view_transform()
-        verts_transformed = transfroms.transform_points(verts)
-
-        rotation_ = transfroms.get_matrix()[:, :3, :3].unsqueeze(1)
-
-        sigmas = expend_sigma(sigmas)
+        verts_transformed = verts - ray_origins[:, None]
         if len(sigmas.shape) == 3:
-            sigmas = sigmas.unsqueeze(0)
-
-        if len(verts_transformed.shape) == 2:
-            verts_transformed = verts_transformed.unsqueeze(0)
-
-        rays = rays.unsqueeze(0).expand(verts_transformed.shape[0], -1, -1, -1)
-
-        rotation_ = rotation_.expand(-1, sigmas.shape[1], -1, -1)
+            sigmas = sigmas.unsqueeze(0).expand(verts_transformed.shape[0], -1, -1, -1)
 
         if self.render_settings['inverse_sigma']:
-            isigma = 2 * rotation_.transpose(2, 3) @ torch.inverse(sigmas.expand(rotation_.shape[0], -1, -1, -1)) @ rotation_
+            isigma = 2 * torch.inverse(sigmas)
         else:
-            isigma = 2 * rotation_.transpose(2, 3) @ sigmas.expand(rotation_.shape[0], -1, -1, -1) @ rotation_
+            isigma = 2 * sigmas
 
         # [b, h, w, s]
         sel_idx, sel_len, sel_act, sel_dsd = ray_tracing(
-                self.cameras, verts_transformed.squeeze(0), isigma.squeeze(0), rays,
+                self.cameras, verts_transformed, isigma, rays,
                 map_size, thr=self.render_settings['thr_activation'], n_assign=self.render_settings['max_assign'],
                 max_points_per_bin=self.render_settings['max_point_per_bin'])
         
