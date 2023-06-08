@@ -26,7 +26,7 @@ verts[:, 1] += 0.5
 
 rgb = torch.Tensor(pointcloud['rgb'][:, 0:3] * 0.85)
 
-cameras = PerspectiveCameras(focal_length=300, principal_point=((160, 160),), image_size=((320, 320),), device=device, )
+cameras = PerspectiveCameras(focal_length=300, principal_point=((160, 160),), image_size=((320, 320),), device=device, in_ndc=False )
 
 verts, sigmas, _ = Converters.fixed_pointcloud_converter(verts, radius=0.003, percentage=0.75)
 
