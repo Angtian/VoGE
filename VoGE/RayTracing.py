@@ -16,18 +16,18 @@ def ray_tracing(transforms, points, isigmas, rays, image_size, thr: float, n_ass
         bin_size = max(int(2 ** np.ceil(np.log2(max_image_size) - 5)), 10)
         
     if max_points_per_bin is None:
-        max_points_per_bin = min(int(max(n_assign * 10, (points.shape[0]) / 10)), points.shape[0])
+        max_points_per_bin = min(int(max(n_assign * 10, (points.shape[1]) / 10)), points.shape[1])
 
     # Without coarse stage
     if max_points_per_bin == -1:
         point_idx_size = ((image_size[0] - 1) // bin_size + 1, (image_size[1] - 1) // bin_size + 1)
-        pixels_to_points_idx = torch.arange(points.shape[0]).view(1, 1, 1, -1) \
-                                .expand(-1, point_idx_size[0], point_idx_size[1],-1) \
+        pixels_to_points_idx = (torch.arange(points.shape[1]).view(1, 1, 1, -1) + torch.arange(points.shape[0]).view(-1, 1, 1, 1) * points.shape[1])\
+                                .expand(-1, point_idx_size[1], point_idx_size[1], -1) \
                                 .type(torch.int32).contiguous().to(points.device)
     else:
         pixels_to_points_idx = rasterize_coarse(transforms, points, isigmas, image_size, thr, bin_size, max_points_per_bin, **kwargs)
 
-    return ray_tracing_fine(points, isigmas, rays, pixels_to_points_idx, thr, bin_size, n_assign)
+    return ray_tracing_fine(points.view(-1, 3), isigmas.view(-1, 3, 3), rays, pixels_to_points_idx, thr, bin_size, n_assign)
 
 
 def convert_to_box(isigmas, thr, z, matrix):
@@ -42,22 +42,24 @@ def convert_to_box(isigmas, thr, z, matrix):
 def rasterize_coarse(cameras, points, isigmas, image_size, thr, bin_size, max_points_per_bin, cloud_to_point=None, num_points_per_cloud=None):
     n = points.shape[0]
 
-    # Perspective cameras are default to be in ndc, however this will cause to_ndc_transform be inactivated
-    _in_ndc_ori = cameras._in_ndc
-    cameras._in_ndc = False
-
+    C = -torch.matmul(torch.inverse(cameras.R.transpose(1, 2)), cameras.T[:, :, None])
+    points = points + C.view(-1, 1, 3)
+    
     to_ndc_transform = cameras.get_ndc_camera_transform()
-    transforms = cameras.get_projection_transform().compose(to_ndc_transform)
+    transforms = cameras.get_full_projection_transform().compose(to_ndc_transform)
     points_ndc = -transforms.transform_points(points)
 
-    boxes = convert_to_box(isigmas, thr, -points_ndc[..., -1], transforms.get_matrix())
+    rotation_ = cameras.get_world_to_view_transform().get_matrix()[:, :3, :3].unsqueeze(1).expand(-1, isigmas.shape[1], -1, -1)
+    isigmas = rotation_.transpose(2, 3) @ isigmas @ rotation_
 
-    points_ndc[..., 2] = points[..., 2]
+    boxes = convert_to_box(isigmas, thr, -points_ndc[..., -1], cameras.get_projection_transform().compose(to_ndc_transform).get_matrix())
+
+    points_ndc[..., 2] = cameras.get_world_to_view_transform().transform_points(points)[..., 2]
 
     if cloud_to_point is None:
         cloud_to_point = torch.arange(points_ndc.shape[0], dtype=torch.long).to(points.device) * points_ndc.shape[1]
     if num_points_per_cloud is None:
-        num_points_per_cloud = torch.ones(points_ndc.shape[0], dtype=torch.long).to(points.device) * points.shape[1]
+        num_points_per_cloud = torch.ones(points_ndc.shape[0], dtype=torch.long).to(points.device) * points_ndc.shape[1]
 
     pixels_to_points_idx = _RasterizeCoarse.apply(
         points_ndc.view(-1, 3),
@@ -68,9 +70,6 @@ def rasterize_coarse(cameras, points, isigmas, image_size, thr, bin_size, max_po
         bin_size,
         max_points_per_bin
     )
-
-    cameras._in_ndc = _in_ndc_ori
-
     return pixels_to_points_idx
 
 
