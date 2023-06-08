@@ -30,7 +30,7 @@ verts_reg = Meshes(verts=[verts_], faces=[faces_]).verts_normals_packed() * 0.4 
 
 color = verts_reg.to(device)
 
-cameras = PerspectiveCameras(focal_length=2000.0, principal_point=((128, 128),), image_size=(render_settings['image_size'],), device=device, )
+cameras = PerspectiveCameras(focal_length=2000.0, principal_point=((128, 128),), image_size=(render_settings['image_size'],), device=device, in_ndc=False )
 
 renderer = GaussianRenderer(cameras=cameras, 
                             render_settings=render_settings)
