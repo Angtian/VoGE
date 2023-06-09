@@ -18,6 +18,20 @@ __device__ void inline dotvectoratom(
     }
 }
 
+
+__device__ static float atomicMax(float* address, float val)
+{
+    int* address_as_i = (int*) address;
+    int old = *address_as_i, assumed;
+    do {
+        assumed = old;
+        old = ::atomicCAS(address_as_i, assumed,
+            __float_as_int(::fmaxf(val, __int_as_float(assumed))));
+    } while (assumed != old);
+    return __int_as_float(old);
+}
+
+
 __global__ void SampleVogeKernel(
     const float* image, 
     const float* vert_weight,
@@ -48,6 +62,33 @@ __global__ void SampleVogeKernel(
         dotvectoratom(weight_, image + (pixel_idx * C), vert_feature + (idx_point * C), C);
 
         atomicAdd(vert_weight_sum + idx_point, weight_);
+    }
+}
+
+
+__global__ void ScatterMaxKernel(
+    const float* image, 
+    const float* vert_weight,
+    const int32_t* vert_index, 
+    const int N,
+    const int B,
+    const int H,
+    const int W,
+    const int K,
+    float* vert_weight_max // (N)
+){
+    const int num_threads = gridDim.x * blockDim.x;
+    const int tid = blockIdx.x * blockDim.x + threadIdx.x;
+
+    for (int pid = tid; pid < B * H * W * K; pid += num_threads) {
+        const int idx_point = vert_index[pid];
+        const float weight_ = vert_weight[pid];
+
+        if (idx_point == -1){
+            continue;
+        }
+
+        atomicMax(vert_weight_max + idx_point, weight_);
     }
 }
 
@@ -91,6 +132,44 @@ std::tuple<at::Tensor, at::Tensor> SampleVoge(
     );
     AT_CUDA_CHECK(cudaGetLastError());
     return std::make_tuple(vert_feature, vert_weight_sum);
+}
+
+
+at::Tensor ScatterMax(
+    const at::Tensor& image, // (B, W, H, C)
+    const at::Tensor& vert_weight, // (B, W, H, K)
+    const at::Tensor& vert_index,  // (B, W, H, K)
+    const int num_vert
+){
+    at::cuda::CUDAGuard device_guard(image.device());
+    cudaStream_t stream = at::cuda::getCurrentCUDAStream();
+
+    const int B = image.size(0);
+    const int H = image.size(1);
+    const int W = image.size(2);
+    const int K = vert_weight.size(3);
+    const int N = num_vert;
+
+    auto float_opts = vert_weight.options().dtype(at::kFloat);
+
+    at::Tensor vert_weight_max = at::zeros({N}, float_opts);
+
+    const size_t blocks = 1024;
+    const size_t threads = 64;
+
+    ScatterMaxKernel<<<blocks, threads, 0, stream>>>(
+        image.contiguous().data_ptr<float>(),
+        vert_weight.contiguous().data_ptr<float>(),
+        vert_index.contiguous().data_ptr<int32_t>(),
+        N,
+        B,
+        H,
+        W,
+        K,
+        vert_weight_max.contiguous().data_ptr<float>()
+    );
+    AT_CUDA_CHECK(cudaGetLastError());
+    return vert_weight_max;
 }
 
 
