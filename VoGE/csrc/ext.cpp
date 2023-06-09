@@ -13,4 +13,5 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("find_nearest_k", &FindNearestK);
   m.def("sample_voge", &SampleVoge);
   m.def("sample_voge_backward", &SampleVogeBackward);
+  m.def("scatter_max", &ScatterMax);
 }
