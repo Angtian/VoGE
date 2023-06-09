@@ -18,6 +18,13 @@ std::tuple<at::Tensor, at::Tensor> SampleVogeBackward(
     const at::Tensor& grad_feature, // (N, C)
     const at::Tensor& grad_weight_sum // (N, )
 );
+
+at::Tensor ScatterMax(
+    const at::Tensor& image, // (B, W, H, C)
+    const at::Tensor& vert_weight, // (B, W, H, K)
+    const at::Tensor& vert_index,  // (B, W, H, K)
+    const int num_vert
+);
 #else
     AT_ERROR("Not compiled with GPU support");
 #endif
