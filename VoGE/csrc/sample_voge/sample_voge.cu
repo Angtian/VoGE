@@ -67,7 +67,6 @@ __global__ void SampleVogeKernel(
 
 
 __global__ void ScatterMaxKernel(
-    const float* image, 
     const float* vert_weight,
     const int32_t* vert_index, 
     const int N,
@@ -136,17 +135,16 @@ std::tuple<at::Tensor, at::Tensor> SampleVoge(
 
 
 at::Tensor ScatterMax(
-    const at::Tensor& image, // (B, W, H, C)
     const at::Tensor& vert_weight, // (B, W, H, K)
     const at::Tensor& vert_index,  // (B, W, H, K)
     const int num_vert
 ){
-    at::cuda::CUDAGuard device_guard(image.device());
+    at::cuda::CUDAGuard device_guard(vert_index.device());
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
-    const int B = image.size(0);
-    const int H = image.size(1);
-    const int W = image.size(2);
+    const int B = vert_weight.size(0);
+    const int H = vert_weight.size(1);
+    const int W = vert_weight.size(2);
     const int K = vert_weight.size(3);
     const int N = num_vert;
 
@@ -158,7 +156,6 @@ at::Tensor ScatterMax(
     const size_t threads = 64;
 
     ScatterMaxKernel<<<blocks, threads, 0, stream>>>(
-        image.contiguous().data_ptr<float>(),
         vert_weight.contiguous().data_ptr<float>(),
         vert_index.contiguous().data_ptr<int32_t>(),
         N,
