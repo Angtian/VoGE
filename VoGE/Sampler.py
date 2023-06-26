@@ -29,7 +29,7 @@ def sample_features(frag, image, n_vert=None):
     return _SampleVoGE.apply(image, vert_weight, vert_index, n_vert)
 
 
-def scatter_max(frag, image, n_vert=None):
+def scatter_max_weight(frag, n_vert=None):
     vert_weight = frag.vert_weight
     vert_index = frag.vert_index
 
@@ -38,10 +38,8 @@ def scatter_max(frag, image, n_vert=None):
             n_vert = frag.num_vertices
         else:
             n_vert = vert_index.max() + 1
-    assert image.device == vert_index.device
     assert n_vert > vert_index.max()
-    assert vert_weight.shape[0] == image.shape[0] and vert_weight.shape[1] == image.shape[1] and vert_weight.shape[2] == image.shape[2]
-    return _ScatterMax.apply(image, vert_weight, vert_index, n_vert)
+    return _ScatterMax.apply(vert_weight, vert_index, n_vert)
 
 
 class _SampleVoGE(torch.autograd.Function):
@@ -82,13 +80,11 @@ class _SampleVoGE(torch.autograd.Function):
 class _ScatterMax(torch.autograd.Function):
     @staticmethod
     def forward(ctx,
-                image,
                 vert_weight,
                 vert_index,
                 num_vert
         ):
         args = (
-                image,  # (B, H, W, C)
                 vert_weight,  # (B, H, W, K)
                 vert_index,  # (B, H, W, K)
                 num_vert
